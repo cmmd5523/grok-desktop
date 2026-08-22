@@ -24,7 +24,8 @@ jobs:
         run: npm run build
 
       - name: Package NSIS installer
-        run: npx electron-builder --win nsis
+        # --publish never: CI has no GH_TOKEN and we upload artifacts manually.
+        run: npx electron-builder --win nsis --publish never
         env:
           # No code-signing certificate on CI: disable auto-discovery.
           CSC_IDENTITY_AUTO_DISCOVERY: "false"
