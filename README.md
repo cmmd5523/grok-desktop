@@ -7,6 +7,19 @@ Windows 10 / 11 桌面端 Grok 聊天应用,基于 **Electron**,通过 OpenAI �
 
 > 🚀 每次推送到 `main` 或打 `v*` tag,GitHub Actions 会自动构建 Windows 安装包(产物见仓库 Actions 页面 artifact;打 tag 会自动发布 GitHub Release)。
 
+## 发布新版本
+
+一条命令搞定版本号 + tag + 推送(GitHub Actions 随后自动构建安装包并发布 Release):
+
+```powershell
+npm run release              # patch: 1.0.0 -> 1.0.1
+npm run release -- minor     # minor: 1.0.0 -> 1.1.0
+npm run release -- major     # major: 1.0.0 -> 2.0.0
+npm run release -- --dry-run # 只预览,不实际执行
+```
+
+发布前请确保工作区无未提交改动(脚本会检查);发布后约 3-5 分钟,仓库 Releases 页出现带安装包的版本。
+
 ## 功能
 
 - 🪟 独立桌面窗口,深色主题,适配 Windows 10 / 11,界面完整复刻 DeepSeek Harness Desktop 布局(侧边栏 + 消息列 + 悬浮胶囊输入卡);窗口尺寸/位置自动记忆
