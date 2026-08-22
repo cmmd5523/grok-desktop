@@ -3,11 +3,11 @@
 ![Build](https://github.com/cmmd5523/grok-desktop/actions/workflows/build.yml/badge.svg)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-Windows 10 / 11 桌面端 Grok 聊天应用,基于 **Electron**,通过 OpenAI 兼容 API(grok2api 自建网关)与 Grok 对话。界面采用 DeepSeek Harness Desktop 设计系统(暗色令牌、圆角气泡、粘性输入区),应用与界面统一使用 **Grok 星形品牌标记**(深色渐变底 + 白色 8 芒星,`.ico` 全尺寸 16–256)。
+Windows 10 / 11 与 macOS 桌面端 Grok 聊天应用,基于 **Electron**,通过 OpenAI 兼容 API(grok2api 自建网关)与 Grok 对话。界面采用 DeepSeek Harness Desktop 设计系统(暗色令牌、圆角气泡、粘性输入区),应用与界面统一使用 **Grok 星形品牌标记**(深色渐变底 + 白色 8 芒星,`.ico` 全尺寸 16–256)。
 
 > 🔐 自 v1.1.0 起,**登录系统**:使用前必须用邮箱注册并通过验证(管理员验证模式);每次对话的 token 用量会上报登录服务器,可在网页版查看使用详情。
 
-> 🚀 每次推送到 `main` 或打 `v*` tag,GitHub Actions 会自动构建 Windows 安装包(产物见仓库 Actions 页面 artifact;打 tag 会自动发布 GitHub Release)。
+> 🚀 每次推送到 `main` 或打 `v*` tag,GitHub Actions 会自动构建 Windows 与 macOS 安装包(产物见仓库 Actions 页面 artifact;打 tag 会自动发布 GitHub Release)。
 
 ## 登录系统与网页版
 
@@ -20,22 +20,32 @@ Windows 10 / 11 桌面端 Grok 聊天应用,基于 **Electron**,通过 OpenAI �
 
 部署(服务器 8001 端口,nginx 分流 `/api/` 与前端页面):见 `grok-server` 目录 README。
 
-## 发布新版本
+## 下载与安装
 
-一条命令搞定版本号 + tag + 推送(GitHub Actions 随后自动构建安装包并发布 Release):
+发布版(Windows / macOS)均可在仓库 **Releases** 页下载:[cmmd5523/grok-desktop/releases](https://github.com/cmmd5523/grok-desktop/releases)
 
-```powershell
-npm run release              # patch: 1.0.0 -> 1.0.1
-npm run release -- minor     # minor: 1.0.0 -> 1.1.0
-npm run release -- major     # major: 1.0.0 -> 2.0.0
-npm run release -- --dry-run # 只预览,不实际执行
+### 🪟 Windows
+
+- 下载 `GrokDesktop.Setup.<版本>.exe`,双击安装即可(Windows 10 / 11 x64)。
+
+### 🍎 macOS
+
+- **Apple Silicon(M1/M2/M3/M4)** 下载 `GrokDesktop-<版本>-arm64.dmg`(或 `-arm64-mac.zip`);
+- **Intel** 下载 `GrokDesktop-<版本>.dmg`(或 `-mac.zip`)。
+
+> ⚠️ 应用**未使用 Apple 开发者证书签名**(需付费证书),macOS 首次打开会提示「无法验证开发者」。请按以下任一方式打开:
+
+```bash
+# 方式一:右键 App →「打开」→ 再次点击「打开」(一次性,推荐)
+# 方式二:终端放行隔离标记(一劳永逸)
+sudo xattr -dr com.apple.quarantine /Applications/GrokDesktop.app
 ```
 
-发布前请确保工作区无未提交改动(脚本会检查);发布后约 3-5 分钟,仓库 Releases 页出现带安装包的版本。
+打开后与 Windows 版功能完全一致:邮箱登录 / 浏览器登录 / 聊天 / 用量统计等。登录凭据由 macOS **钥匙串(Keychain)** 加密保存。
 
 ## 功能
 
-- 🪟 独立桌面窗口,深色主题,适配 Windows 10 / 11,界面完整复刻 DeepSeek Harness Desktop 布局(侧边栏 + 消息列 + 悬浮胶囊输入卡);窗口尺寸/位置自动记忆
+- 🖥 独立桌面窗口,深色主题,适配 Windows 10 / 11 与 macOS,界面完整复刻 DeepSeek Harness Desktop 布局(侧边栏 + 消息列 + 悬浮胶囊输入卡);窗口尺寸/位置自动记忆
 - 🎛 **composer 工具栏**(照抄 DSH InputBar):左下角「＋」命令菜单(上传文件 / 压缩历史 / 导出会话 / 模型)、权限选择(只读 / 读写 / 完全访问)、右下角模型选择(模型 + 推理等级 关/低/中/高)、上下文占用圆环、34px 蓝色发送键
 - 🗜 **压缩历史**:把较旧对话交给 Grok 生成摘要并折叠(compact)
 - ⤓ **导出会话**:一键保存为 Markdown 文件
@@ -68,7 +78,7 @@ npm run release -- --dry-run # 只预览,不实际执行
 
 ## 环境要求
 
-- Windows 10 / 11 x64
+- Windows 10 / 11 x64,或 macOS 12+(Intel / Apple Silicon)
 - Node.js 18+(仅开发/构建时需要;打包后的安装包无需 Node)
 
 ## 快速开始
@@ -132,7 +142,7 @@ npm run dist:portable # 免安装便携版 exe
 - Electron 43(主进程负责网络请求、文件读取与安全存储,渲染进程纯 UI)
 - marked + DOMPurify(Markdown 渲染与消毒)
 - esbuild(前端打包)
-- electron-builder(Windows 安装包)
+- electron-builder(Windows / macOS 安装包)
 
 ## 目录结构
 

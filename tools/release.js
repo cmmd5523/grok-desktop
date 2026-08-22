@@ -1,10 +1,5 @@
 #!/usr/bin/env node
-// 一键发布: bump 版本号 -> git commit -> 打 v* tag -> push(触发 CI 构建 GitHub Release)
-// 用法:
-//   npm run release                # patch: 1.0.0 -> 1.0.1
-//   npm run release -- minor       # minor: 1.0.0 -> 1.1.0
-//   npm run release -- major       # major: 1.0.0 -> 2.0.0
-//   npm run release -- --dry-run   # 只预览将要执行的命令,不实际执行
+// 一键发布: bump 版本号 -> git commit -> 打 v* tag -> push(触发 CI 构建 Release)
 const { execSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
