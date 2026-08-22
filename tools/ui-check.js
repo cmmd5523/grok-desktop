@@ -66,6 +66,7 @@ ipcMain.handle('auth:register', () => ({ email: 'x@demo.com', demoCode: '123456'
 ipcMain.handle('auth:verify', () => ({ token: 't', user: { email: 'x@demo.com', role: 'user' } }));
 ipcMain.handle('auth:login', () => ({ token: 't', user: { email: 'test@demo.com', role: 'user' } }));
 ipcMain.handle('auth:logout', () => ({ ok: true }));
+ipcMain.handle('auth:config', () => ({ turnstileSiteKey: '' }));
 ipcMain.handle('usage:report', () => ({ ok: true }));
 
 app.whenReady().then(async () => {

@@ -53,6 +53,7 @@ app.whenReady().then(async () => {
     return j;
   });
   ipcMain.handle('auth:logout', () => { storedToken = ''; storedUser = null; return { ok: true }; });
+  ipcMain.handle('auth:config', () => ({ turnstileSiteKey: '' }));
   ipcMain.handle('usage:report', () => ({ ok: true }));
   // other stubs
   ipcMain.handle('settings:get', () => ({ baseUrl: 'http://127.0.0.1:8000/v1', model: 'grok-4.3-fast', effort: 'off', systemPrompt: '', hasApiKey: true, apiKeyMask: '…chen' }));

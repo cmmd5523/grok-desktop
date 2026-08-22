@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta
     http-equiv="Content-Security-Policy"
-    content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'none'"
+    content="default-src 'self'; script-src 'self' https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; frame-src https://challenges.cloudflare.com; connect-src 'none'"
   >
   <title>Grok 桌面客户端</title>
   <link rel="stylesheet" href="styles.css">
@@ -41,6 +41,7 @@
         <input type="text" id="authRegName" placeholder="你的昵称">
         <label>密码(至少 6 位)</label>
         <input type="password" id="authRegPassword" placeholder="••••••••">
+        <div id="turnstileReg" class="turnstile-wrap"></div>
         <button type="submit" class="auth-btn">注册</button>
         <div class="auth-hint" id="authRegHint"></div>
       </form>
@@ -276,5 +277,6 @@
   <div id="toast" class="toast hidden"></div>
 
   <script src="../../dist/renderer.bundle.js"></script>
+  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" async defer></script>
 </body>
 </html>

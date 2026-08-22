@@ -1265,6 +1265,26 @@ function wireEvents() {
 
 /* ---------------- auth (login required) ---------------- */
 
+let turnstileToken = '';
+let turnstileRendered = false;
+
+async function maybeRenderTurnstile() {
+  if (turnstileRendered) return;
+  try {
+    const cfg = await window.grokAPI.authConfig();
+    const siteKey = cfg && cfg.turnstileSiteKey;
+    if (!siteKey || typeof window.turnstile !== 'function') return;
+    turnstileRendered = true;
+    window.turnstile.render(document.getElementById('turnstileReg'), {
+      sitekey: siteKey,
+      theme: 'dark',
+      callback: (token) => { turnstileToken = token; },
+      'expired-callback': () => { turnstileToken = ''; },
+      'error-callback': () => { turnstileToken = ''; },
+    });
+  } catch {}
+}
+
 function showAuthScreen() {
   els.app.classList.add('hidden');
   els.authScreen.classList.remove('hidden');
@@ -1281,6 +1301,7 @@ function setAuthTab(tab) {
   els.authLoginEmail.closest('form').classList.toggle('hidden', tab !== 'login');
   els.authRegEmail.closest('form').classList.toggle('hidden', tab !== 'register');
   document.getElementById('authVerifyPanel').classList.add('hidden');
+  if (tab === 'register') maybeRenderTurnstile();
 }
 
 function bindAuthEvents() {
@@ -1319,6 +1340,7 @@ function bindAuthEvents() {
         email: els.authRegEmail.value.trim(),
         name: els.authRegName.value.trim(),
         password: els.authRegPassword.value,
+        turnstileToken: turnstileToken || undefined,
       });
       if (!res || !res.email) throw new Error('注册失败');
       els.authVerifyEmail.value = res.email;

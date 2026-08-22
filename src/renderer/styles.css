@@ -192,6 +192,7 @@ body {
 .auth-hint { margin-top: 8px; font-size: 12px; color: #e6c76c; min-height: 14px; white-space: pre-wrap; }
 .auth-note { font-size: 12px; color: var(--text-2, #9a9aa3); line-height: 1.6; margin-bottom: 6px; }
 .auth-verify { margin-top: 4px; }
+.turnstile-wrap { margin-top: 12px; display: flex; justify-content: center; min-height: 65px; }
 .auth-user-line {
   font-size: 11px;
   color: var(--text-2, #9a9aa3);

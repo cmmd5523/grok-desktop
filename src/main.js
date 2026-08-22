@@ -104,9 +104,18 @@ ipcMain.handle('auth:status', () => {
   return { loggedIn: !!authToken() && !!user, user };
 });
 
-ipcMain.handle('auth:register', async (_event, { email, password, name }) => {
-  const json = await authFetch('/api/auth/register', { body: { email, password, name } });
+ipcMain.handle('auth:register', async (_event, { email, password, name, turnstileToken }) => {
+  const json = await authFetch('/api/auth/register', { body: { email, password, name, turnstileToken } });
   return { message: json.message, demoCode: json.demoCode, email: json.email };
+});
+
+ipcMain.handle('auth:config', async () => {
+  try {
+    const json = await authFetch('/api/auth/config', { method: 'GET' });
+    return { turnstileSiteKey: json.turnstileSiteKey || '' };
+  } catch {
+    return { turnstileSiteKey: '' };
+  }
 });
 
 ipcMain.handle('auth:verify', async (_event, { email, code }) => {
