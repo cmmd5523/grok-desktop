@@ -718,6 +718,9 @@ function appendAssistantMessageEl(content) {
 function showEmptyState() {
   els.messages.classList.add('hidden');
   els.emptyState.classList.remove('hidden');
+  // Clear any leftover bubbles from the previous conversation, otherwise the
+  // next incremental render would show the old conversation's messages again.
+  els.messagesInner.innerHTML = '';
   els.convTitle.textContent = '新对话';
   document.title = 'Grok 桌面客户端';
   els.keyHint.textContent = state.settings.hasApiKey
@@ -901,6 +904,10 @@ async function send() {
   // the whole history (large conversations re-render slowly on every turn).
   els.emptyState.classList.add('hidden');
   els.messages.classList.remove('hidden');
+  if (conv.messages.length === 1) {
+    // Fresh conversation: drop any stale bubbles left by a previous one.
+    els.messagesInner.innerHTML = '';
+  }
   els.messagesInner.appendChild(appendUserMessageEl(userMsg.content, userMsg.attachments));
   els.convTitle.textContent = conv.title || '新对话';
   document.title = `${conv.title || '新对话'} · Grok`;

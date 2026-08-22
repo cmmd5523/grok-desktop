@@ -236,6 +236,47 @@ app.whenReady().then(async () => {
       `saved=${JSON.stringify(savedContent).slice(0, 80)} dom=${JSON.stringify(reopen.text).slice(0, 80)}`
     );
 
+    // Regression: after a completed conversation, "new conversation" + a new
+    // question must go into a NEW conversation, never leak into the old one.
+    const before = [...savedConvs.values()];
+    const firstId = before[0] ? before[0].id : '';
+    await run(`(async () => {
+      document.getElementById('newChatBtn').click();
+      await new Promise((r) => setTimeout(r, 120));
+      const t = document.getElementById('input');
+      t.value = '第二个问题,应该进新会话';
+      t.dispatchEvent(new Event('input'));
+      document.getElementById('sendBtn').click();
+    })()`);
+    await new Promise((r) => setTimeout(r, 1000));
+    const convsAfter = [...savedConvs.values()];
+    const newConv = convsAfter.find((c) => c.id !== firstId);
+    const oldConv = convsAfter.find((c) => c.id === firstId);
+    const newHasOwnQuestion = newConv && (newConv.messages || []).some((m) => m.content.includes('第二个问题'));
+    const oldUnchanged = oldConv && !(oldConv.messages || []).some((m) => m.content.includes('第二个问题'));
+    const convCount = convsAfter.length;
+    // UI layer: the visible message list must NOT contain the old conversation's
+    // content mixed in with the new question (the "串到旧会话" bug).
+    const uiLeak = await run(
+      `(() => {
+        const text = document.getElementById('messages').textContent;
+        const msgs = [...document.querySelectorAll('#messages .msg')];
+        return {
+          hasOldQuestion: text.includes('你好,介绍一下你自己'),
+          hasNewQuestion: text.includes('第二个问题'),
+          userBubbles: msgs.filter((m) => m.classList.contains('user')).length,
+          assistantBubbles: msgs.filter((m) => m.classList.contains('assistant')).length,
+        };
+      })()`
+    );
+    const noUiLeak = !uiLeak.hasOldQuestion && uiLeak.hasNewQuestion && uiLeak.userBubbles === 1 && uiLeak.assistantBubbles === 1;
+    check(
+      'new conversation stays separate',
+      convCount === 2 && !!newConv && !!oldConv && newHasOwnQuestion && oldUnchanged,
+      `count=${convCount} newHasQ=${!!newHasOwnQuestion} oldUnchanged=${!!oldUnchanged}`
+    );
+    check('no stale bubbles leak into new conversation', noUiLeak, JSON.stringify(uiLeak));
+
     // Escape closes all menus
     await run(`document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }))`);
     const allClosed = await run(
