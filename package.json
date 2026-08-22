@@ -1,6 +1,6 @@
 {
   "name": "grok-desktop",
-  "version": "1.0.2",
+  "version": "1.1.0",
   "description": "Windows 桌面端 Grok 聊天客户端(使用 xAI API)",
   "main": "src/main.js",
   "license": "MIT",
