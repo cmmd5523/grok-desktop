@@ -1,0 +1,229 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta
+    http-equiv="Content-Security-Policy"
+    content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'none'"
+  >
+  <title>Grok 桌面客户端</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div id="app">
+    <aside id="sidebar">
+      <div class="sidebar-top">
+        <div class="brand-row">
+          <div class="brand-mark">
+            <svg viewBox="0 0 100 100" width="15" height="15" aria-hidden="true">
+              <path fill="#fff" d="M50 12 L55.55 38.6 L78.28 23.72 L63.4 46.45 L90 52 L63.4 57.55 L78.28 80.28 L55.55 65.4 L50 92 L44.45 65.4 L21.72 80.28 L36.6 57.55 L10 52 L36.6 46.45 L21.72 23.72 L44.45 38.6 Z"></path>
+            </svg>
+          </div>
+          <div class="brand-name">Grok</div>
+        </div>
+        <button id="newChatBtn" class="new-chat-btn" title="新对话">
+          <span class="new-chat-icon">＋</span>
+          <span class="new-chat-label">新对话</span>
+        </button>
+      </div>
+      <nav id="convList" class="conv-list"></nav>
+      <div class="sidebar-foot">
+        <button id="settingsBtn" class="side-btn" title="设置">⚙ 设置</button>
+      </div>
+    </aside>
+
+    <main id="main">
+      <header id="topbar">
+        <div class="topbar-left">
+          <span id="convTitle" class="conv-title">新对话</span>
+        </div>
+        <div class="topbar-right">
+          <span id="statusDot" class="status-dot idle" title="状态"></span>
+        </div>
+      </header>
+
+      <div id="scrollBody" class="scroll-body">
+        <div id="messages" class="messages hidden">
+          <div id="messagesInner" class="messages-inner"></div>
+        </div>
+
+        <div id="emptyState" class="empty-state hidden">
+          <div class="hero-brand">
+            <span class="hero-mark">
+              <svg viewBox="0 0 100 100" width="26" height="26" aria-hidden="true">
+                <path fill="#fff" d="M50 12 L55.55 38.6 L78.28 23.72 L63.4 46.45 L90 52 L63.4 57.55 L78.28 80.28 L55.55 65.4 L50 92 L44.45 65.4 L21.72 80.28 L36.6 57.55 L10 52 L36.6 46.45 L21.72 23.72 L44.45 38.6 Z"></path>
+              </svg>
+            </span>
+            <h1>Grok 桌面客户端</h1>
+            <p>本地窗口 · xAI API · 支持上传 PDF / PPT / 文档并提问</p>
+          </div>
+          <div id="keyHint" class="hero-hint"></div>
+        </div>
+
+        <div id="composer">
+          <div id="composerCard" class="composer-card">
+            <div id="attachRow" class="attach-row hidden"></div>
+            <div id="inputScroll" class="composer-scroll">
+              <textarea
+                id="input"
+                rows="1"
+                placeholder="给 Grok 发消息…(Enter 发送,Shift+Enter 换行)"
+              ></textarea>
+            </div>
+            <div class="toolbar-row">
+              <div class="tools">
+                <button id="cmdBtn" class="add-btn" title="命令与附件" aria-haspopup="menu">＋</button>
+                <div class="modes">
+                  <button id="permissionBtn" class="chip-btn" aria-haspopup="menu">
+                    <span id="permissionIcon" class="chip-icon">✏️</span>
+                    <span id="permissionLabel" class="chip-label">读写</span>
+                    <span class="chip-chevron">▾</span>
+                  </button>
+                </div>
+              </div>
+              <div class="trailing">
+                <button id="modelBtn" class="chip-btn model-chip" aria-haspopup="menu">
+                  <span id="modelLabel" class="chip-label"></span>
+                  <span class="chip-chevron">▾</span>
+                </button>
+                <button id="contextBtn" class="meter-btn" title="上下文已用" aria-haspopup="menu">
+                  <svg width="20" height="20" viewBox="0 0 20 20">
+                    <circle class="meter-track" cx="10" cy="10" r="7.5" stroke-width="2" fill="none"></circle>
+                    <circle id="meterFill" class="meter-fill" cx="10" cy="10" r="7.5" stroke-width="2" fill="none" stroke-dasharray="47.12 47.12" stroke-dashoffset="47.12"></circle>
+                  </svg>
+                </button>
+                <button id="sendBtn" class="send-btn" title="发送" disabled>➤</button>
+                <button id="stopBtn" class="stop-btn hidden" title="停止生成">■</button>
+              </div>
+            </div>
+
+            <div id="cmdMenu" class="menu cmd-menu hidden">
+              <button class="menu-item" data-cmd="files">
+                <span class="item-icon">📎</span>
+                <span class="item-name">上传文件</span>
+                <span class="item-desc">PDF / PPT / 文档 / 图片等</span>
+              </button>
+              <button class="menu-item" data-cmd="compact">
+                <span class="item-icon">🗜</span>
+                <span class="item-name">压缩历史</span>
+                <span class="item-desc">Compact 较旧对话为摘要</span>
+              </button>
+              <button class="menu-item" data-cmd="export">
+                <span class="item-icon">⤓</span>
+                <span class="item-name">导出会话</span>
+                <span class="item-desc">Download 本会话日志为 Markdown</span>
+              </button>
+              <button class="menu-item" data-cmd="model">
+                <span class="item-icon">◈</span>
+                <span class="item-name">模型</span>
+                <span class="item-desc">选择本会话使用的模型与推理等级</span>
+              </button>
+            </div>
+
+            <div id="permissionMenu" class="menu perm-menu hidden">
+              <button class="menu-item" data-perm="readonly">
+                <span class="item-icon">📖</span>
+                <span class="item-name">只读</span>
+                <span class="item-desc">仅聊天,不可上传文件或导出</span>
+              </button>
+              <button class="menu-item" data-perm="readwrite">
+                <span class="item-icon">✏️</span>
+                <span class="item-name">读写</span>
+                <span class="item-desc">可上传文件、导出会话</span>
+              </button>
+              <button class="menu-item" data-perm="full">
+                <span class="item-icon">⚡</span>
+                <span class="item-name">完全访问</span>
+                <span class="item-desc">全部能力,含压缩历史</span>
+              </button>
+            </div>
+
+            <div id="modelMenu" class="menu model-menu hidden">
+              <button class="menu-cell" id="modelCell">
+                <span class="cell-label">模型</span>
+                <span id="modelCellValue" class="cell-value">grok-4.3-fast</span>
+                <span class="cell-chevron">›</span>
+              </button>
+              <button class="menu-cell" id="effortCell">
+                <span class="cell-label">推理等级</span>
+                <span id="effortCellValue" class="cell-value">关</span>
+                <span class="cell-chevron">›</span>
+              </button>
+              <div id="modelSub" class="menu-sub hidden">
+                <div class="sub-title" id="modelSubTitle">选择模型</div>
+                <div id="modelSubList" class="sub-list"></div>
+              </div>
+              <div id="effortSub" class="menu-sub hidden">
+                <div class="sub-title">推理等级</div>
+                <div id="effortSubList" class="sub-list">
+                  <button class="menu-item" data-effort="off"><span class="item-name">关</span></button>
+                  <button class="menu-item" data-effort="low"><span class="item-name">低</span></button>
+                  <button class="menu-item" data-effort="medium"><span class="item-name">中</span></button>
+                  <button class="menu-item" data-effort="high"><span class="item-name">高</span></button>
+                </div>
+              </div>
+            </div>
+
+            <div id="contextPanel" class="ctx-panel hidden">
+              <div class="ctx-header">
+                <span class="ctx-headline">上下文已用</span>
+                <span id="ctxFigures" class="ctx-figures">0 / 128K</span>
+              </div>
+              <div id="ctxPercent" class="ctx-percent">0%</div>
+              <div id="ctxBar" class="ctx-bar"></div>
+              <dl class="ctx-rows">
+                <div class="ctx-row">
+                  <dt><span class="ctx-swatch swatch-system"></span>系统</dt>
+                  <dd id="ctxSystem">~0 tok</dd>
+                </div>
+                <div class="ctx-row">
+                  <dt><span class="ctx-swatch swatch-messages"></span>消息</dt>
+                  <dd id="ctxMessages">~0 tok</dd>
+                </div>
+                <div class="ctx-row">
+                  <dt><span class="ctx-swatch swatch-files"></span>附件</dt>
+                  <dd id="ctxFiles">~0 tok</dd>
+                </div>
+              </dl>
+            </div>
+          </div>
+          <div class="composer-hint">Grok 可能会犯错,请核对重要信息。</div>
+          <div id="statsLine" class="stats-line hidden"></div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <div id="settingsModal" class="modal hidden">
+    <div class="modal-card">
+      <h2>设置</h2>
+      <label class="field">
+        <span class="field-label">API 地址(Base URL)</span>
+        <input id="baseUrlInput" type="text" placeholder="http://md-grok.de5.net/v1" autocomplete="off">
+        <span class="field-hint">自建 grok2api / OpenAI 兼容网关的根地址,以 /v1 结尾</span>
+      </label>
+      <label class="field">
+        <span class="field-label">API Key</span>
+        <input id="apiKeyInput" type="password" placeholder="xai-… / sk-…" autocomplete="off">
+        <span class="field-hint" id="apiKeyHint"></span>
+      </label>
+      <label class="field">
+        <span class="field-label">System Prompt(可选)</span>
+        <textarea id="systemPromptInput" rows="3" placeholder="例如:你是 Grok,回答简洁友好,使用中文。"></textarea>
+      </label>
+      <label class="field checkbox-field">
+        <input id="clearKeyCheck" type="checkbox">
+        <span>清除已保存的 API Key</span>
+      </label>
+      <div class="modal-actions">
+        <button id="settingsCancelBtn" class="btn">取消</button>
+        <button id="settingsSaveBtn" class="btn primary">保存</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast hidden"></div>
+
+  <script src="../../dist/renderer.bundle.js"></script>
+</body>
+</html>

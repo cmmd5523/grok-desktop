@@ -1,0 +1,19 @@
+# Dependencies & build output
+node_modules/
+dist/
+release/
+
+# Logs
+*.log
+
+# Secrets — NEVER commit (server SSH credentials)
+tools/creds.json
+
+# Local settings / runtime data
+settings.json
+conversations.json
+
+# OS junk
+.DS_Store
+Thumbs.db
+desktop.ini

@@ -1,0 +1,52 @@
+{
+  "name": "grok-desktop",
+  "version": "1.0.0",
+  "description": "Windows 桌面端 Grok 聊天客户端(使用 xAI API)",
+  "main": "src/main.js",
+  "license": "MIT",
+  "scripts": {
+    "build": "esbuild src/renderer/renderer.js --bundle --minify --format=iife --outfile=dist/renderer.bundle.js",
+    "start": "npm run build && electron .",
+    "smoke": "npm run build && electron . --smoke-test",
+    "dist": "npm run build && electron-builder --win nsis",
+    "dist:portable": "npm run build && electron-builder --win portable"
+  },
+  "build": {
+    "appId": "com.local.grokdesktop",
+    "productName": "GrokDesktop",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "src/**/*",
+      "dist/**/*",
+      "package.json"
+    ],
+    "win": {
+      "icon": "build/icon.ico",
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "shortcutName": "Grok 桌面客户端"
+    }
+  },
+  "devDependencies": {
+    "electron": "^43.4.1",
+    "electron-builder": "^26.15.3",
+    "esbuild": "^0.28.2"
+  },
+  "dependencies": {
+    "dompurify": "^3.4.14",
+    "marked": "^18.0.10"
+  }
+}

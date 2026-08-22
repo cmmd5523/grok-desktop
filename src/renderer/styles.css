@@ -1,0 +1,1548 @@
+/* ============================================================================
+   Grok 桌面客户端 — 基于 DeepSeek Harness Desktop 设计系统
+   (packages/client/ui-theme 令牌 + AppFrame/SidebarRoot/ConversationRoot/ChatView)
+   ========================================================================== */
+
+:root {
+  /* --- static palette (dark) --- */
+  --bluish-1000: rgb(15, 17, 21);
+  --bluish-950: rgb(21, 21, 23);
+  --bluish-900: rgb(27, 27, 28);
+  --bluish-875: rgb(35, 35, 36);
+  --bluish-850: rgb(44, 44, 46);
+  --bluish-800: rgb(53, 54, 56);
+  --bluish-750: rgb(67, 69, 74);
+  --bluish-700: rgb(97, 102, 107);
+  --bluish-600: rgb(129, 133, 140);
+  --bluish-500: rgb(151, 157, 166);
+  --bluish-400: rgb(173, 178, 184);
+  --bluish-300: rgb(207, 211, 214);
+  --bluish-200: rgb(225, 229, 238);
+  --bluish-100: rgb(235, 238, 242);
+  --bluish-50: rgb(249, 250, 251);
+
+  --deepseek-200: rgb(211, 226, 255);
+  --deepseek-400: rgb(103, 158, 254);
+  --deepseek-450: rgb(86, 134, 254);
+  --deepseek-500: rgb(65, 118, 230);
+  --deepseek-600: rgb(72, 104, 178);
+  --deepseek-100: rgb(228, 237, 253);
+  --deepseek-50: rgb(237, 243, 254);
+
+  --green-500: rgb(34, 197, 94);
+  --green-400: rgb(78, 209, 126);
+  --red-400: rgb(242, 90, 90);
+  --red-500: rgb(239, 68, 68);
+  --amber-500: rgb(245, 158, 11);
+  --neutral-700: rgb(60, 60, 61);
+  --neutral-600: rgb(84, 85, 87);
+
+  /* --- semantic aliases (dark) --- */
+  --bg-base: var(--bluish-950);
+  --bg-layer-1: var(--bluish-900);
+  --bg-layer-2: var(--bluish-850);
+  --bg-layer-3: var(--bluish-800);
+  --sidebar-fill: var(--bluish-900);
+  --sidebar-nav-hover: var(--bluish-850);
+  --sidebar-nav-active: var(--bluish-750);
+  --bubble: var(--bluish-850);
+  --input-bg: var(--bluish-850);
+  --elevated-fill: var(--bluish-750);
+  --floating-hover: var(--bluish-800);
+  --label-primary: var(--bluish-50);
+  --label-primary-dimmed: var(--bluish-100);
+  --label-secondary: var(--bluish-300);
+  --label-tertiary: var(--bluish-400);
+  --label-caption: var(--bluish-600);
+  --border-l1: rgba(255, 255, 255, 0.06);
+  --border-l2: rgba(255, 255, 255, 0.12);
+  --border-l3: rgba(255, 255, 255, 0.16);
+  --hover-bg: rgba(255, 255, 255, 0.08);
+  --hover-accent: rgba(255, 255, 255, 0.24);
+  --business-blue: var(--deepseek-400);
+  --brand-blue: var(--deepseek-450);
+  --scrollbar-thumb: var(--neutral-700);
+  --scrollbar-thumb-hover: var(--neutral-600);
+  --code-bg: var(--bluish-900);
+  --toast-bg: var(--bluish-750);
+
+  --ease: cubic-bezier(0.4, 0, 0.2, 1);
+  --dur: 0.2s;
+  --dur-fast: 0.1s;
+  --dur-slow: 0.3s;
+
+  --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC',
+    'Hiragino Sans GB', 'Microsoft YaHei', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  --font-code: 'SF Mono', 'JetBrains Mono', 'Fira Code', Consolas, 'Microsoft YaHei';
+
+  --chat-content-width: 748px;
+  --composer-card-max: 780px;
+  --scrollbar-width: 8px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+  overflow: hidden;
+  background: var(--bg-base);
+  color: var(--label-primary);
+  font-family: var(--font);
+  font-size: 14px;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* --- scrollbars (DSH skin: 8px, thumb l1, transparent track) --- */
+::-webkit-scrollbar {
+  width: var(--scrollbar-width);
+  height: var(--scrollbar-width);
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  border-radius: 4px;
+  background: var(--scrollbar-thumb);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-thumb-hover);
+}
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+.hidden {
+  display: none !important;
+}
+
+/* ============================================================================
+   App frame: sidebar | center column
+   ========================================================================== */
+
+#app {
+  display: grid;
+  grid-template-columns: 264px 1fr;
+  height: 100vh;
+  overflow: hidden;
+  background: var(--bg-base);
+}
+
+/* --- sidebar --- */
+
+#sidebar {
+  min-width: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  padding: 6px 12px;
+  background: var(--sidebar-fill);
+  border-right: 1px solid var(--border-l1);
+}
+
+.sidebar-top {
+  flex: none;
+}
+
+.brand-row {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  height: 60px;
+  padding: 8px 4px;
+  margin-bottom: 8px;
+  box-sizing: border-box;
+}
+
+.brand-mark {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 7px;
+  background: linear-gradient(160deg, #2b2b30, #0d0d10);
+  box-shadow: inset 0 0 0 1px var(--border-l1);
+}
+
+.brand-name {
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 24px;
+  letter-spacing: 0.04em;
+  color: var(--label-primary);
+  white-space: nowrap;
+}
+
+/* New chat (DSH New Session bar: 38px, radius 12, elevated fill) */
+.new-chat-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: calc(100% - 4px);
+  height: 38px;
+  padding: 8px 16px;
+  margin: 0 2px 8px;
+  box-sizing: border-box;
+  border: 1px solid var(--border-l2);
+  border-radius: 12px;
+  background: var(--elevated-fill);
+  color: var(--label-primary);
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 22px;
+  cursor: pointer;
+  transition: background var(--dur) var(--ease);
+}
+
+.new-chat-btn:hover {
+  background: var(--floating-hover);
+}
+
+.new-chat-icon {
+  font-size: 15px;
+  line-height: 1;
+}
+
+.conv-list {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  margin: 0 -4px 0 0;
+  padding: 4px 4px 8px;
+}
+
+.conv-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  cursor: pointer;
+  color: var(--label-secondary);
+  transition: background var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease);
+}
+
+.conv-item:hover {
+  background: var(--sidebar-nav-hover);
+  color: var(--label-primary);
+}
+
+.conv-item.active {
+  background: var(--sidebar-nav-active);
+  color: var(--label-primary);
+}
+
+.conv-item-title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 13.5px;
+}
+
+.conv-item-time {
+  flex-shrink: 0;
+  font-size: 11px;
+  color: var(--label-caption);
+}
+
+.conv-item-del {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  line-height: 18px;
+  text-align: center;
+  border: none;
+  background: transparent;
+  color: var(--label-caption);
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 13px;
+  opacity: 0;
+  transition: opacity var(--dur-fast) var(--ease), background var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease);
+}
+
+.conv-item:hover .conv-item-del {
+  opacity: 1;
+}
+
+.conv-item-del:hover {
+  background: rgba(242, 90, 90, 0.16);
+  color: var(--red-400);
+}
+
+.sidebar-foot {
+  flex: none;
+  padding-top: 4px;
+  border-top: 1px solid var(--border-l1);
+}
+
+.side-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 10px;
+  border: none;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--label-secondary);
+  font-size: 13.5px;
+  text-align: left;
+  cursor: pointer;
+  transition: background var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease);
+}
+
+.side-btn:hover {
+  background: var(--sidebar-nav-hover);
+  color: var(--label-primary);
+}
+
+/* ============================================================================
+   Center column
+   ========================================================================== */
+
+#main {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--bg-base);
+}
+
+/* Header (DSH ConversationRoot header: border-bottom l2) */
+#topbar {
+  position: relative;
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 56px;
+  padding: 12px 28px 12px 20px;
+  border-bottom: 1px solid transparent;
+}
+
+#topbar::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  bottom: 1px;
+  left: 0;
+  z-index: 0;
+  height: 1px;
+  background: var(--border-l2);
+  pointer-events: none;
+}
+
+.topbar-left {
+  min-width: 0;
+}
+
+.conv-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 14px;
+  line-height: 20px;
+  color: var(--label-tertiary);
+}
+
+.topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+#modelSelect {
+  background: var(--bg-layer-3);
+  color: var(--label-secondary);
+  border: 1px solid var(--border-l1);
+  border-radius: 10px;
+  padding: 4px 10px;
+  font-size: 13px;
+  font-family: var(--font);
+  cursor: pointer;
+  max-width: 210px;
+  transition: border-color var(--dur-fast) var(--ease);
+}
+
+#modelSelect:hover {
+  border-color: var(--border-l2);
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.status-dot.idle {
+  background: var(--label-caption);
+}
+
+.status-dot.online {
+  background: var(--green-500);
+  box-shadow: 0 0 6px rgba(34, 197, 94, 0.55);
+}
+
+.status-dot.offline {
+  background: var(--red-400);
+  box-shadow: 0 0 6px rgba(242, 90, 90, 0.55);
+}
+
+.status-dot.busy {
+  background: var(--business-blue);
+  animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+  50% {
+    opacity: 0.35;
+  }
+}
+
+/* Scroll body: transcript + sticky composer seat (DSH ConversationRoot) */
+.scroll-body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-gutter: stable;
+}
+
+/* ============================================================================
+   Messages (DSH ChatView: 748px centered column, 16px gap)
+   ========================================================================== */
+
+.messages {
+  flex: 1 0 auto;
+  display: flex;
+  flex-direction: column;
+  padding: 16px 16px 8px;
+}
+
+.messages-inner {
+  max-width: var(--chat-content-width);
+  width: 100%;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* User bubble: right-aligned dark bubble (DSH MessageItem) */
+.msg.user {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.msg.user .user-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+  min-width: 0;
+  max-width: min(525px, 82%);
+}
+
+.msg.user .bubble {
+  max-width: 100%;
+  background: var(--bubble);
+  border-radius: 22px;
+  padding: 10px 16px;
+  font-size: 16px;
+  line-height: 24px;
+  color: var(--label-primary);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* Attachment chips inside a user bubble */
+.attach-chip-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.attach-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--border-l1);
+  font-size: 12px;
+  line-height: 18px;
+  color: var(--label-secondary);
+  max-width: 260px;
+}
+
+.attach-chip .chip-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.attach-chip .chip-size {
+  color: var(--label-caption);
+  font-variant-numeric: tabular-nums;
+}
+
+.attach-chip .chip-warn {
+  font-size: 11px;
+  color: #e6c76c;
+  margin-left: 8px;
+  white-space: nowrap;
+}
+
+/* Assistant message: flat markdown */
+.msg.assistant {
+  display: flex;
+  min-width: 0;
+}
+
+.msg.assistant .md-body {
+  flex: 1;
+  min-width: 0;
+  font-size: 15px;
+  line-height: 24px;
+  color: var(--label-primary);
+  overflow-wrap: anywhere;
+}
+
+.meta-note {
+  margin-top: 8px;
+  font-size: 12px;
+  line-height: 18px;
+  color: var(--label-caption);
+}
+
+/* Thinking indicator: DSH brand-blue shimmer */
+.typing {
+  display: inline-flex;
+  align-items: center;
+  height: 26px;
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+  background: linear-gradient(
+    90deg,
+    var(--deepseek-500) 0%,
+    var(--deepseek-500) 40%,
+    var(--deepseek-200) 50%,
+    var(--deepseek-500) 60%,
+    var(--deepseek-500) 100%
+  );
+  background-position: 100% 0;
+  background-size: 250% 100%;
+  background-clip: text;
+  color: transparent;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: shimmer 1.8s linear infinite;
+}
+
+@keyframes shimmer {
+  to {
+    background-position: 0 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .typing {
+    background-position: 0 0;
+    background-size: 100% 100%;
+    animation: none;
+  }
+  .status-dot.busy {
+    animation: none;
+  }
+}
+
+/* ============================================================================
+   Markdown (DSH AssistantMarkdown tokens)
+   ========================================================================== */
+
+.md-body > :first-child {
+  margin-top: 0;
+}
+.md-body > :last-child {
+  margin-bottom: 0;
+}
+
+.md-body p {
+  margin: 0.5em 0;
+}
+
+.md-body h1,
+.md-body h2,
+.md-body h3,
+.md-body h4 {
+  margin: 1em 0 0.5em;
+  line-height: 1.3;
+  font-weight: 600;
+}
+.md-body h1 {
+  font-size: 1.3em;
+}
+.md-body h2 {
+  font-size: 1.18em;
+}
+.md-body h3 {
+  font-size: 1.08em;
+}
+
+.md-body ul,
+.md-body ol {
+  margin: 0.5em 0;
+  padding-left: 1.5em;
+}
+.md-body li {
+  margin: 0.25em 0;
+}
+
+.md-body a {
+  color: var(--business-blue);
+  text-decoration: none;
+}
+.md-body a:hover {
+  text-decoration: underline;
+}
+
+.md-body blockquote {
+  margin: 0.6em 0;
+  padding: 2px 14px;
+  border-left: 3px solid var(--business-blue);
+  color: var(--label-secondary);
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 0 8px 8px 0;
+}
+
+.md-body code {
+  font-family: var(--font-code);
+  font-size: 0.9em;
+  background: var(--bg-layer-2);
+  padding: 1px 5px;
+  border-radius: 4px;
+}
+
+.md-body pre {
+  background: var(--code-bg);
+  border: 1px solid var(--border-l1);
+  border-radius: 12px;
+  padding: 12px 14px;
+  overflow-x: auto;
+  margin: 0.6em 0;
+  line-height: 1.55;
+}
+
+.md-body pre code {
+  background: transparent;
+  padding: 0;
+  font-size: 12.5px;
+}
+
+.code-block {
+  position: relative;
+  margin: 0.6em 0;
+}
+
+.code-block pre {
+  margin: 0;
+}
+
+.copy-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  border: 1px solid var(--border-l1);
+  background: var(--bg-layer-2);
+  color: var(--label-secondary);
+  font-size: 11px;
+  padding: 3px 9px;
+  border-radius: 6px;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity var(--dur) var(--ease), color var(--dur) var(--ease), border-color var(--dur) var(--ease);
+  font-family: var(--font);
+}
+
+.code-block:hover .copy-btn {
+  opacity: 1;
+}
+
+.copy-btn:hover {
+  color: var(--label-primary);
+  border-color: var(--border-l2);
+}
+
+.md-body table {
+  border-collapse: collapse;
+  margin: 0.7em 0;
+  font-size: 13.5px;
+  display: block;
+  overflow-x: auto;
+  max-width: 100%;
+}
+
+.md-body th,
+.md-body td {
+  border: 1px solid var(--border-l2);
+  padding: 6px 12px;
+  text-align: left;
+}
+
+.md-body th {
+  background: var(--bg-layer-1);
+  font-weight: 600;
+}
+
+.md-body hr {
+  border: none;
+  border-top: 1px solid var(--border-l2);
+  margin: 1em 0;
+}
+
+/* ============================================================================
+   Empty state (hero)
+   ========================================================================== */
+
+.empty-state {
+  flex: 1 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 4px;
+  padding: 40px 24px 0;
+}
+
+.hero-brand h1 {
+  margin: 0 0 6px;
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+.hero-brand p {
+  margin: 0;
+  color: var(--label-tertiary);
+  font-size: 13px;
+  line-height: 20px;
+}
+
+.hero-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  margin-bottom: 10px;
+  border-radius: 13px;
+  background: linear-gradient(160deg, #2b2b30, #0d0d10);
+  box-shadow: inset 0 0 0 1px var(--border-l2), 0 8px 30px rgba(0, 0, 0, 0.45);
+}
+
+.hero-hint {
+  margin-top: 8px;
+  font-size: 12px;
+  color: var(--label-caption);
+}
+
+/* ============================================================================
+   Composer (DSH InputBar: floating capsule card + toolbar row + menus)
+   ========================================================================== */
+
+#composer {
+  flex: none;
+  position: sticky;
+  bottom: 0;
+  z-index: 7;
+  /* Transcript fade band above the seat */
+  background: linear-gradient(
+    180deg,
+    rgba(21, 21, 23, 0) 0px,
+    var(--bg-base) 36px
+  );
+  padding: 0 16px 14px;
+}
+
+.composer-card {
+  box-sizing: border-box;
+  position: relative; /* floating menus anchor against the card */
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  max-width: var(--composer-card-max);
+  margin: 0 auto;
+  padding-top: 10px;
+  border: 1px solid var(--border-l1);
+  border-radius: 22px;
+  background: var(--input-bg);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.35);
+  font-size: 16px;
+  line-height: 24px;
+  transition: border-color var(--dur-fast) var(--ease);
+}
+
+.composer-card:focus-within {
+  border-color: var(--border-l2);
+}
+
+.composer-scroll {
+  max-height: 336px;
+  overflow-y: auto;
+}
+
+#input {
+  display: block;
+  width: 100%;
+  resize: none;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: var(--label-primary);
+  font-family: var(--font);
+  font-size: 16px;
+  line-height: 24px;
+  padding: 4px 16px 0;
+}
+
+#input::placeholder {
+  color: var(--label-caption);
+}
+
+/* Toolbar row (DSH InputBar .row): attach + modes left, model + meter + send right */
+.toolbar-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 2px 8px 6px;
+  min-width: 0;
+}
+
+.tools,
+.modes,
+.trailing {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+
+.tools {
+  gap: 16px;
+}
+
+.modes {
+  gap: 12px;
+}
+
+.trailing {
+  flex: none;
+  margin-left: auto;
+  gap: 12px;
+}
+
+/* Attach circle (DSH .add): 28px, selector fill, primary glyph */
+.add-btn {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: 999px;
+  background: var(--bg-layer-2);
+  color: var(--label-primary);
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  transition: background var(--dur-fast) var(--ease);
+}
+
+.add-btn:hover:not(:disabled) {
+  background: var(--hover-bg);
+}
+
+.add-btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+/* Chip buttons (DSH PermissionSelect / ModelSelect trigger): 28px pill */
+.chip-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  max-width: 220px;
+  height: 28px;
+  padding: 0 4px 0 8px;
+  border: none;
+  border-radius: 24px;
+  outline: none;
+  background: transparent;
+  color: var(--label-secondary);
+  font-size: 13px;
+  line-height: 20px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background var(--dur-fast) var(--ease);
+}
+
+.chip-btn:hover:not(:disabled) {
+  background: var(--hover-bg);
+}
+
+.chip-btn:focus-visible {
+  box-shadow: 0 0 0 2px var(--border-l3);
+}
+
+.chip-btn:disabled {
+  color: var(--label-caption);
+  cursor: default;
+}
+
+.chip-icon {
+  display: inline-flex;
+  flex: 0 0 auto;
+  font-size: 13px;
+}
+
+.chip-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.chip-chevron {
+  display: inline-flex;
+  flex: 0 0 auto;
+  color: var(--label-caption);
+  font-size: 10px;
+  transition: transform 120ms var(--ease);
+}
+
+.chip-open .chip-chevron {
+  transform: rotate(180deg);
+}
+
+/* Context meter ring (DSH ContextMeter): 28px circular trigger beside send */
+.meter-btn {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--label-secondary);
+  cursor: pointer;
+  transition: background var(--dur-fast) var(--ease);
+}
+
+.meter-btn:hover {
+  background: var(--hover-bg);
+}
+
+.meter-track {
+  stroke: var(--border-l3);
+}
+
+.meter-fill {
+  stroke: var(--label-tertiary);
+  stroke-linecap: round;
+  transform: rotate(-90deg);
+  transform-origin: 50% 50%;
+  transition: stroke-dashoffset 300ms var(--ease), stroke 200ms var(--ease);
+}
+
+/* Primary send (DSH .primary): 34px circle, info-fill, white glyph */
+.send-btn,
+.stop-btn {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 34px;
+  height: 34px;
+  border: none;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background var(--dur-fast) var(--ease), transform var(--dur-fast) var(--ease);
+  transform: translateY(-2px);
+}
+
+.send-btn {
+  background: var(--business-blue);
+  color: #fff;
+  font-size: 15px;
+}
+
+.send-btn:hover:not(:disabled) {
+  background: var(--deepseek-500);
+}
+
+.send-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.stop-btn {
+  background: rgba(242, 90, 90, 0.16);
+  color: var(--red-400);
+  font-size: 12px;
+}
+
+.stop-btn:hover {
+  background: rgba(242, 90, 90, 0.3);
+}
+
+/* Pending attachment chips row inside the composer card */
+.attach-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 0 12px;
+}
+
+.pending-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 240px;
+  padding: 4px 6px 4px 10px;
+  border-radius: 9px;
+  background: var(--bg-layer-2);
+  border: 1px solid var(--border-l1);
+  font-size: 12px;
+  line-height: 18px;
+  color: var(--label-secondary);
+}
+
+.pending-chip .chip-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pending-chip .chip-x {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  line-height: 16px;
+  text-align: center;
+  border: none;
+  border-radius: 5px;
+  background: transparent;
+  color: var(--label-caption);
+  font-size: 12px;
+  cursor: pointer;
+  transition: background var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease);
+}
+
+.pending-chip .chip-x:hover {
+  background: rgba(242, 90, 90, 0.16);
+  color: var(--red-400);
+}
+
+/* --- Floating menus (DSH MenuView / Menu primitive): r12, hairline, shadow lv3 --- */
+.menu {
+  position: absolute;
+  z-index: 60;
+  min-width: min(280px, 100%);
+  max-width: min(537px, 100%);
+  max-height: 320px;
+  overflow-y: auto;
+  padding: 4px;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--border-l3);
+  border-radius: 12px;
+  background: var(--bg-layer-2);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+}
+
+.cmd-menu {
+  bottom: calc(100% + 4px);
+  left: 0;
+}
+
+.perm-menu {
+  bottom: calc(100% + 4px);
+  left: 44px;
+}
+
+.menu-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 40px;
+  padding: 8px 10px;
+  border: none;
+  border-radius: 10px;
+  background: transparent;
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 22px;
+  color: var(--label-primary);
+  text-align: left;
+  transition: background var(--dur-fast) var(--ease);
+}
+
+.menu-item:hover,
+.menu-item.active {
+  background: var(--hover-bg);
+}
+
+.item-icon {
+  display: inline-flex;
+  flex: none;
+  width: 16px;
+  height: 16px;
+  align-items: center;
+  justify-content: center;
+  color: var(--label-tertiary);
+  font-size: 14px;
+}
+
+.item-name {
+  flex: none;
+  max-width: 40%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.item-desc {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--label-tertiary);
+  font-size: 12px;
+}
+
+/* Model menu: two-level cells (DSH ModelSelect) */
+.model-menu {
+  right: 8px;
+  bottom: calc(100% + 4px);
+  width: 264px;
+  min-width: 240px;
+  max-width: 320px;
+}
+
+.menu-cell {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  height: 40px;
+  padding: 0 10px;
+  border: none;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--label-primary);
+  font-size: 14px;
+  line-height: 22px;
+  cursor: pointer;
+  text-align: left;
+  transition: background var(--dur-fast) var(--ease);
+}
+
+.menu-cell:hover {
+  background: var(--hover-bg);
+}
+
+.cell-label {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+.cell-value {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: right;
+  color: var(--label-tertiary);
+  font-size: 12px;
+}
+
+.cell-chevron {
+  flex: 0 0 auto;
+  color: var(--label-tertiary);
+}
+
+.menu-sub {
+  border-top: 1px solid var(--border-l1);
+  margin-top: 4px;
+  padding-top: 4px;
+}
+
+.sub-title {
+  padding: 6px 10px 4px;
+  color: var(--label-tertiary);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 18px;
+}
+
+.sub-list {
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+.sub-list .menu-item .item-name {
+  flex: 1;
+  max-width: none;
+}
+
+.sub-list .menu-item .check-mark {
+  flex: 0 0 18px;
+  text-align: right;
+  color: var(--label-primary);
+}
+
+.group-title {
+  padding: 6px 10px 2px;
+  color: var(--label-tertiary);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 18px;
+}
+
+/* Context panel (DSH ContextMeter panel): 264px, r12, inverted hairline */
+.ctx-panel {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  right: 8px;
+  z-index: 60;
+  box-sizing: border-box;
+  width: 264px;
+  padding: 12px;
+  border: 1px solid var(--border-l3);
+  border-radius: 12px;
+  background: var(--bg-layer-2);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+  font-size: 12px;
+  line-height: 20px;
+  color: var(--label-secondary);
+}
+
+.ctx-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ctx-figures {
+  margin-left: auto;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  color: var(--label-primary);
+}
+
+.ctx-percent {
+  font-weight: 500;
+  font-size: 13px;
+  color: var(--label-primary);
+}
+
+.ctx-bar {
+  display: flex;
+  gap: 1px;
+  margin: 10px 0 12px;
+  height: 4px;
+  border-radius: 999px;
+  background: var(--hover-bg);
+  overflow: hidden;
+}
+
+.ctx-bar .seg {
+  flex: none;
+  min-width: 2px;
+  height: 100%;
+  border-radius: 1px;
+}
+
+.seg-system {
+  background: var(--bluish-400);
+}
+
+.seg-messages {
+  background: var(--deepseek-450);
+}
+
+.seg-files {
+  background: rgb(167, 139, 250);
+}
+
+.ctx-rows {
+  margin: 6px 0 0;
+}
+
+.ctx-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 2px 0;
+}
+
+.ctx-row dt {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--label-secondary);
+}
+
+.ctx-row dd {
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+  color: var(--label-primary);
+}
+
+.ctx-swatch {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+}
+
+.swatch-system {
+  background: var(--bluish-400);
+}
+
+.swatch-messages {
+  background: var(--deepseek-450);
+}
+
+.swatch-files {
+  background: rgb(167, 139, 250);
+}
+
+.composer-hint {
+  max-width: var(--composer-card-max);
+  margin: 6px auto 0;
+  text-align: center;
+  font-size: 11px;
+  line-height: 16px;
+  color: var(--label-caption);
+}
+
+/* Session stats row (DSH StatsLine.module.css): 12/20 tertiary text,
+   aligned to the shared message column axis */
+.stats-line {
+  display: block;
+  text-align: center;
+  max-width: var(--chat-content-width);
+  width: 100%;
+  margin: 0 auto;
+  box-sizing: border-box;
+  padding: 4px 32px 0;
+  font-size: 12px;
+  line-height: 20px;
+  color: var(--label-tertiary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.stats-sep {
+  color: var(--border-l3);
+  margin: 0 10px;
+}
+
+/* Hero mode: composer centered in the scroll body (DSH hero phase) */
+#app.hero .scroll-body {
+  justify-content: center;
+}
+
+#app.hero .messages,
+#app.hero .meta-note {
+  display: none;
+}
+
+#app.hero .empty-state {
+  display: flex;
+}
+
+#app.hero #composer {
+  position: static;
+  background: none;
+  padding: 0 24px 7vh;
+}
+
+/* ============================================================================
+   Modal
+   ========================================================================== */
+
+.modal {
+  position: fixed;
+  inset: 0;
+  background: var(--bg-mask-1, rgba(0, 0, 0, 0.5));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+
+.modal-card {
+  width: 460px;
+  max-width: calc(100vw - 40px);
+  background: var(--bg-layer-2);
+  border: 1px solid var(--border-l2);
+  border-radius: 14px;
+  padding: 22px 24px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+}
+
+.modal-card h2 {
+  margin: 0 0 18px;
+  font-size: 17px;
+  font-weight: 600;
+}
+
+.field {
+  display: block;
+  margin-bottom: 16px;
+}
+
+.field-label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 13px;
+  color: var(--label-secondary);
+}
+
+.field input[type="password"],
+.field input[type="text"],
+.field textarea {
+  width: 100%;
+  background: var(--bg-layer-1);
+  border: 1px solid var(--border-l1);
+  border-radius: 10px;
+  color: var(--label-primary);
+  font-family: var(--font);
+  font-size: 13px;
+  padding: 8px 10px;
+  outline: none;
+  transition: border-color var(--dur-fast) var(--ease);
+}
+
+.field input:focus,
+.field textarea:focus {
+  border-color: var(--business-blue);
+}
+
+.field textarea {
+  resize: vertical;
+}
+
+.field-hint {
+  display: block;
+  margin-top: 6px;
+  font-size: 12px;
+  color: var(--label-caption);
+}
+
+.checkbox-field {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--label-secondary);
+  cursor: pointer;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.btn {
+  padding: 7px 18px;
+  border: 1px solid var(--border-l1);
+  border-radius: 10px;
+  background: var(--elevated-fill);
+  color: var(--label-primary);
+  font-size: 13px;
+  font-family: var(--font);
+  cursor: pointer;
+  transition: background var(--dur-fast) var(--ease), border-color var(--dur-fast) var(--ease);
+}
+
+.btn:hover {
+  background: var(--floating-hover);
+  border-color: var(--border-l2);
+}
+
+.btn.primary {
+  background: var(--business-blue);
+  border-color: var(--business-blue);
+  color: var(--bluish-1000);
+  font-weight: 600;
+}
+
+.btn.primary:hover {
+  background: var(--deepseek-500);
+}
+
+/* ============================================================================
+   Toast
+   ========================================================================== */
+
+.toast {
+  position: fixed;
+  bottom: 104px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--toast-bg);
+  color: var(--label-primary);
+  border: 1px solid var(--border-l2);
+  padding: 9px 16px;
+  border-radius: 10px;
+  font-size: 13px;
+  z-index: 200;
+  max-width: 80vw;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+  animation: toast-in 0.2s var(--ease);
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 8px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
