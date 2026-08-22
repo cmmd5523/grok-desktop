@@ -26,9 +26,9 @@ async function serverApi(method, p, body, token) {
 
 app.whenReady().then(async () => {
   // --- real auth IPC (mirrors src/main.js logic) ---
-  async function authFetch(p, { body, token } = {}) {
+  async function authFetch(p, { body, token, method = 'POST' } = {}) {
     const res = await fetch(AUTH_BASE + p, {
-      method: 'POST',
+      method,
       headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: 'Bearer ' + token } : {}) },
       body: body ? JSON.stringify(body) : undefined,
       signal: AbortSignal.timeout(20000),
@@ -53,7 +53,11 @@ app.whenReady().then(async () => {
     return j;
   });
   ipcMain.handle('auth:logout', () => { storedToken = ''; storedUser = null; return { ok: true }; });
-  ipcMain.handle('auth:config', () => ({ turnstileSiteKey: '' }));
+  ipcMain.handle('auth:openRegister', () => ({ ok: true }));
+  ipcMain.handle('auth:config', async () => {
+    const j = await authFetch('/api/auth/config', { method: 'GET' });
+    return { turnstileSiteKey: (j && j.turnstileSiteKey) || '' };
+  });
   ipcMain.handle('usage:report', () => ({ ok: true }));
   // other stubs
   ipcMain.handle('settings:get', () => ({ baseUrl: 'http://127.0.0.1:8000/v1', model: 'grok-4.3-fast', effort: 'off', systemPrompt: '', hasApiKey: true, apiKeyMask: '…chen' }));
@@ -83,7 +87,7 @@ app.whenReady().then(async () => {
     check('admin creates activated user', mk.status === 201, mk.status + ' ' + JSON.stringify(mk.json).slice(0, 80));
 
     const win = new BrowserWindow({
-      show: false,
+      show: true,
       webPreferences: {
         preload: path.join(ROOT, 'src', 'preload.js'),
         contextIsolation: true,
@@ -93,10 +97,26 @@ app.whenReady().then(async () => {
     });
     await win.loadFile(path.join(ROOT, 'src', 'renderer', 'index.html'));
     const run = (code) => win.webContents.executeJavaScript(code, true);
+    const consoleMsgs = [];
+    win.webContents.on('console-message', (e) => {
+      const msg = e && (e.message !== undefined ? e.message : e);
+      consoleMsgs.push(typeof msg === 'string' ? msg : JSON.stringify(msg));
+    });
 
     // login screen shows
     const authVisible = await run(`!document.getElementById('authScreen').classList.contains('hidden') && !document.getElementById('app').classList.contains('hidden') === false`);
     check('login screen shown when logged out', authVisible);
+
+    // desktop register tab: Turnstile is not supported under file:// (Cloudflare
+    // error 110200), so we guide users to the web version for registration.
+    await run(`document.querySelector('[data-atab="register"]').click()`);
+    await new Promise((r) => setTimeout(r, 1200));
+    const regGuide = await run(`(() => ({
+      guideVisible: !!document.getElementById('openWebRegBtn') && getComputedStyle(document.getElementById('openWebRegBtn')).display !== 'none',
+      regFormVisible: !document.getElementById('authFormRegister').classList.contains('hidden'),
+    }))()`);
+    check('desktop register shows web-registration guide', regGuide.guideVisible && regGuide.regFormVisible, JSON.stringify(regGuide));
+    await run(`document.querySelector('[data-atab="login"]').click()`);
 
     // fill login form and submit (real IPC -> real server)
     const result = await run(`(async () => {

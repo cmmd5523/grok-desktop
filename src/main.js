@@ -118,6 +118,16 @@ ipcMain.handle('auth:config', async () => {
   }
 });
 
+ipcMain.handle('auth:openRegister', async () => {
+  const url = (AUTH_BASE || 'http://md-grok.de5.net').replace(/\/+$/, '');
+  try {
+    await shell.openExternal(url + '/#/register');
+  } catch (err) {
+    console.error('openExternal failed:', err);
+  }
+  return { ok: true };
+});
+
 ipcMain.handle('auth:verify', async (_event, { email, code }) => {
   const json = await authFetch('/api/auth/verify', { body: { email, code } });
   if (json.token && json.user) saveAuth(json.token, json.user);

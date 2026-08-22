@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta
     http-equiv="Content-Security-Policy"
-    content="default-src 'self'; script-src 'self' https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; frame-src https://challenges.cloudflare.com; connect-src 'none'"
+    content="default-src 'self'; script-src 'self' https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; frame-src https://challenges.cloudflare.com; connect-src https://challenges.cloudflare.com"
   >
   <title>Grok 桌面客户端</title>
   <link rel="stylesheet" href="styles.css">
@@ -35,6 +35,10 @@
       </form>
 
       <form id="authFormRegister" class="auth-form hidden">
+        <div class="auth-note reg-guide">
+          ⚠️ 人机验证(Turnstile)在桌面客户端不可用,首次注册请前往网页版:
+          <button type="button" id="openWebRegBtn" class="auth-link-btn">打开网页版注册</button>
+        </div>
         <label>邮箱</label>
         <input type="email" id="authRegEmail" placeholder="you@example.com">
         <label>昵称(可选)</label>

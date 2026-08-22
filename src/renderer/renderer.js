@@ -1279,9 +1279,13 @@ async function maybeRenderTurnstile() {
       sitekey: siteKey,
       theme: 'dark',
       action: 'signup',
-      callback: (token) => { turnstileToken = token; },
-      'expired-callback': () => { turnstileToken = ''; },
-      'error-callback': () => { turnstileToken = ''; },
+      callback: (token) => {
+        turnstileToken = token;
+        const el = document.getElementById('turnstileReg');
+        if (el) el.dataset.turnstileDone = token;
+      },
+      'expired-callback': () => { turnstileToken = ''; const el = document.getElementById('turnstileReg'); if (el) delete el.dataset.turnstileDone; },
+      'error-callback': () => { turnstileToken = ''; const el = document.getElementById('turnstileReg'); if (el) delete el.dataset.turnstileDone; },
     });
   } catch {}
 }
@@ -1385,6 +1389,10 @@ function bindAuthEvents() {
     state.current = null;
     state.pending = null;
     showAuthScreen();
+  });
+
+  document.getElementById('openWebRegBtn').addEventListener('click', () => {
+    window.grokAPI.authOpenRegister().catch(() => {});
   });
 }
 

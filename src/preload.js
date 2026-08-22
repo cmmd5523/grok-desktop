@@ -19,6 +19,7 @@ contextBridge.exposeInMainWorld('grokAPI', {
   authLogin: (payload) => ipcRenderer.invoke('auth:login', payload),
   authLogout: () => ipcRenderer.invoke('auth:logout'),
   authConfig: () => ipcRenderer.invoke('auth:config'),
+  authOpenRegister: () => ipcRenderer.invoke('auth:openRegister'),
   reportUsage: (payload) => ipcRenderer.invoke('usage:report', payload),
   onChatDelta: (callback) => {
     const listener = (_event, data) => callback(data);
