@@ -1,4 +1,4 @@
-# Grok 桌面客户端
+﻿# Grok 桌面客户端
 
 ![Build](https://github.com/cmmd5523/grok-desktop/actions/workflows/build.yml/badge.svg)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)

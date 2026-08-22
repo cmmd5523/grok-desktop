@@ -1,4 +1,4 @@
-const { app, BrowserWindow, Menu, ipcMain, shell, safeStorage, dialog, screen } = require('electron');
+﻿const { app, BrowserWindow, Menu, ipcMain, shell, safeStorage, dialog, screen } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const { createStore } = require('./store');
@@ -63,7 +63,7 @@ function maskSecret(value) {
 
 /* ---------------- auth (login server) ---------------- */
 
-const AUTH_BASE = (DEFAULT_AUTH_URL || 'http://md-grok.de5.net').replace(/\/+$/, '');
+const AUTH_BASE = (DEFAULT_AUTH_URL || 'https://md-grok.de5.net').replace(/\/+$/, '');
 
 async function authFetch(path, { body, token, method = 'POST' } = {}) {
   if (!AUTH_BASE) throw new Error('未配置登录服务器地址');
@@ -119,7 +119,7 @@ ipcMain.handle('auth:config', async () => {
 });
 
 ipcMain.handle('auth:openRegister', async () => {
-  const url = (AUTH_BASE || 'http://md-grok.de5.net').replace(/\/+$/, '');
+  const url = (AUTH_BASE || 'https://md-grok.de5.net').replace(/\/+$/, '');
   try {
     await shell.openExternal(url + '/#/register');
   } catch (err) {
@@ -133,7 +133,7 @@ ipcMain.handle('auth:openRegister', async () => {
 // The renderer polls auth:devicePoll until the session is granted.
 ipcMain.handle('auth:deviceLogin', async () => {
   const deviceId = crypto.randomUUID();
-  const url = (AUTH_BASE || 'http://md-grok.de5.net').replace(/\/+$/, '') + '/#/login?device=' + deviceId;
+  const url = (AUTH_BASE || 'https://md-grok.de5.net').replace(/\/+$/, '') + '/#/login?device=' + deviceId;
   try {
     await shell.openExternal(url);
   } catch (err) {
