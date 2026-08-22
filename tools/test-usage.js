@@ -4,8 +4,8 @@ const { streamChat } = require('../src/api');
 (async () => {
   const deltas = [];
   const usage = await streamChat({
-    baseUrl: 'http://md-grok.de5.net/v1',
-    apiKey: 'sk-mdchen',
+    baseUrl: (process.env.BASE_URL || 'http://127.0.0.1:8000/v1'),
+    apiKey: (process.env.API_KEY || 'sk-placeholder'),
     model: 'grok-4.3-fast',
     messages: [{ role: 'user', content: '用三句话介绍你自己' }],
     onDelta: (d) => deltas.push(d),

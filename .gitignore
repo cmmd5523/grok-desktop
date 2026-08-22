@@ -6,8 +6,9 @@ release/
 # Logs
 *.log
 
-# Secrets — NEVER commit (server SSH credentials)
+# Secrets — NEVER commit (server SSH credentials, real gateway keys)
 tools/creds.json
+src/config.local.js
 
 # Local settings / runtime data
 settings.json

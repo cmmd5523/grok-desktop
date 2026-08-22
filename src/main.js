@@ -6,9 +6,21 @@ const { streamChat, completeChat, listModels, ApiError } = require('./api');
 
 const isSmokeTest = process.argv.includes('--smoke-test');
 
-// Built-in defaults: the user's self-hosted grok2api deployment.
-const DEFAULT_BASE_URL = 'http://md-grok.de5.net/v1';
-const DEFAULT_API_KEY = 'sk-mdchen';
+// Built-in defaults: read from the local (gitignored) config so real gateway
+// credentials never land in the public repository. Fall back to the committed
+// example template (empty placeholders) when config.local.js is absent.
+function loadDefaultConfig() {
+  try {
+    return require('./config.local');
+  } catch {
+    try {
+      return require('./config.example');
+    } catch {
+      return { DEFAULT_BASE_URL: '', DEFAULT_API_KEY: '' };
+    }
+  }
+}
+const { DEFAULT_BASE_URL, DEFAULT_API_KEY } = loadDefaultConfig();
 const DEFAULT_MODEL = 'grok-4.3-fast';
 
 let mainWindow = null;
@@ -482,8 +494,12 @@ ipcMain.handle('chat:start', async (event, payload) => {
   }
 
   try {
+    const resolvedBaseUrl = cur.baseUrl || DEFAULT_BASE_URL;
+    if (!resolvedBaseUrl) {
+      throw new Error('未配置 API 地址,请先在「设置」中填写网关地址');
+    }
     const usage = await streamChat({
-      baseUrl: cur.baseUrl || DEFAULT_BASE_URL,
+      baseUrl: resolvedBaseUrl,
       apiKey,
       model,
       messages: fullMessages,

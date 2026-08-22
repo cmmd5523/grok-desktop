@@ -8,8 +8,8 @@ const { streamChat, ApiError } = require(path.resolve(__dirname, '..', 'src', 'a
 const pdfUri = `data:application/pdf;base64,${fs.readFileSync(path.resolve(__dirname, '..', '..', 'Week1_Part1.pdf')).toString('base64')}`;
 const pngBuf = fs.readFileSync(path.resolve(__dirname, '..', '..', 'grok-desktop', 'build', 'icon-64.png'));
 const pngUri = `data:image/png;base64,${pngBuf.toString('base64')}`;
-const BASE_URL = 'http://md-grok.de5.net/v1';
-const API_KEY = 'sk-mdchen';
+const BASE_URL = (process.env.BASE_URL || 'http://127.0.0.1:8000/v1');
+const API_KEY = (process.env.API_KEY || 'sk-placeholder');
 
 async function run(label, model, content) {
   const deltas = [];

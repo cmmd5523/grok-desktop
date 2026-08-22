@@ -1,6 +1,6 @@
 // End-to-end: upload a PDF via grok2api file content block, ask Grok to read it.
-const BASE = 'http://md-grok.de5.net/v1';
-const KEY = 'sk-mdchen';
+const BASE = (process.env.BASE_URL || 'http://127.0.0.1:8000/v1');
+const KEY = (process.env.API_KEY || 'sk-placeholder');
 const MODEL = process.env.MODEL || 'grok-4.3-fast';
 
 // Build a minimal but valid one-page PDF with visible text.

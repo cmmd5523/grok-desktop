@@ -1,6 +1,6 @@
 // Round-trip: tool_calls -> tool result -> final answer, streaming, on grok-4.3-fast.
-const BASE = 'http://md-grok.de5.net/v1';
-const KEY = 'sk-mdchen';
+const BASE = (process.env.BASE_URL || 'http://127.0.0.1:8000/v1');
+const KEY = (process.env.API_KEY || 'sk-placeholder');
 const MODEL = 'grok-4.3-fast';
 
 const bashTool = {

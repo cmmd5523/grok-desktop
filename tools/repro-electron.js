@@ -7,8 +7,8 @@ const { streamChat } = require(path.resolve(__dirname, '..', 'src', 'api'));
 
 const pdfPath = path.resolve(__dirname, '..', '..', 'Week1_Part1.pdf');
 const dataUri = `data:application/pdf;base64,${fs.readFileSync(pdfPath).toString('base64')}`;
-const BASE_URL = 'http://md-grok.de5.net/v1';
-const API_KEY = 'sk-mdchen';
+const BASE_URL = (process.env.BASE_URL || 'http://127.0.0.1:8000/v1');
+const API_KEY = (process.env.API_KEY || 'sk-placeholder');
 
 async function tryModel(model) {
   const deltas = [];

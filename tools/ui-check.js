@@ -13,7 +13,7 @@ function check(name, ok, detail) {
 // Minimal IPC stubs so the renderer's init calls resolve (the real app
 // registers these in src/main.js; here we only need the UI surface).
 ipcMain.handle('settings:get', () => ({
-  baseUrl: 'http://md-grok.de5.net/v1',
+  baseUrl: (process.env.BASE_URL || 'http://127.0.0.1:8000/v1'),
   model: 'grok-4.3-fast',
   effort: 'off',
   systemPrompt: '',

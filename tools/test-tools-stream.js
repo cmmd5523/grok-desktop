@@ -1,6 +1,6 @@
 // Streaming tool-call test for a grok2api model.
-const BASE = 'http://md-grok.de5.net/v1';
-const KEY = 'sk-mdchen';
+const BASE = (process.env.BASE_URL || 'http://127.0.0.1:8000/v1');
+const KEY = (process.env.API_KEY || 'sk-placeholder');
 const MODEL = process.env.MODEL || 'grok-4.3-fast';
 const FORCE_TOOL = process.env.FORCE === '1';
 

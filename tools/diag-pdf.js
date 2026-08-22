@@ -8,8 +8,8 @@ const MODEL = process.argv[3] || 'grok-4.3-fast';
 const dataUri = `data:application/pdf;base64,${fs.readFileSync(pdfPath).toString('base64')}`;
 console.log('PDF:', pdfPath, fs.statSync(pdfPath).size, 'bytes; dataUri length:', dataUri.length, '; model:', MODEL);
 
-const BASE_URL = 'http://md-grok.de5.net/v1';
-const API_KEY = 'sk-mdchen';
+const BASE_URL = (process.env.BASE_URL || 'http://127.0.0.1:8000/v1');
+const API_KEY = (process.env.API_KEY || 'sk-placeholder');
 
 (async () => {
   const messages = [

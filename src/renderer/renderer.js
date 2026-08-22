@@ -92,7 +92,7 @@ const FILE_ICONS = {
 
 const state = {
   settings: {
-    baseUrl: 'http://md-grok.de5.net/v1',
+    baseUrl: '',
     model: 'grok-4.3-fast',
     effort: 'off',
     systemPrompt: '',

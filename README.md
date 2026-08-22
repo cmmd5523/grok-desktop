@@ -20,17 +20,20 @@ Windows 10 / 11 桌面端 Grok 聊天应用,基于 **Electron**,通过 OpenAI �
 - 🔒 渲染进程沙箱化(contextIsolation + sandbox),外部链接走系统浏览器
 - ⚡ 发送消息时增量渲染(只追加新气泡,不重排历史),大对话不卡
 
-## 内置配置
+## 内置配置与密钥安全
 
-软件默认内置以下连接配置(首次启动时写入本地并加密保存):
+软件支持「开箱即用」:构建/打包时若存在 `src/config.local.js`,其内置网关地址与 API Key 会在首次启动时写入本地并用 **Windows DPAPI 加密**存储(`safeStorage`),不落明文。
 
-| 配置项 | 默认值 |
+> ⚠️ 本仓库是**公开源码**,`src/config.local.js` 已被 `.gitignore` 排除,**不会**上传 GitHub。仓库内只提交占位模板 `src/config.example.js`。克隆后请:
+>
+> 1. 复制 `src/config.example.js` 为 `src/config.local.js`,填写你的 grok2api 网关地址与 Key;或
+> 2. 直接运行应用,在「⚙ 设置」中填写(同样 DPAPI 加密保存)。
+
+| 配置项 | 说明 |
 | --- | --- |
-| API 地址 | `http://md-grok.de5.net/v1` |
-| API Key | `sk-mdchen`(DPAPI 加密落盘) |
-| 默认模型 | `grok-4.3-fast` |
-
-可在「⚙ 设置」中修改地址 / Key / System Prompt,地址支持任意 OpenAI 兼容网关。
+| API 地址 | `src/config.local.js` 的 `DEFAULT_BASE_URL` 或「设置」中填写,支持任意 OpenAI 兼容网关 |
+| API Key | `src/config.local.js` 的 `DEFAULT_API_KEY` 或「设置」中填写,DPAPI 加密落盘 |
+| 默认模型 | `grok-4.3-fast`(可在模型菜单中切换) |
 
 ## 环境要求
 
