@@ -1,6 +1,11 @@
 # Grok 桌面客户端
 
+![Build](https://github.com/cmmd5523/grok-desktop/actions/workflows/build.yml/badge.svg)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 Windows 10 / 11 桌面端 Grok 聊天应用,基于 **Electron**,通过 OpenAI 兼容 API(grok2api 自建网关)与 Grok 对话。界面采用 DeepSeek Harness Desktop 设计系统(暗色令牌、圆角气泡、粘性输入区),应用与界面统一使用 **Grok 星形品牌标记**(深色渐变底 + 白色 8 芒星,`.ico` 全尺寸 16–256)。
+
+> 🚀 每次推送到 `main` 或打 `v*` tag,GitHub Actions 会自动构建 Windows 安装包(产物见仓库 Actions 页面 artifact;打 tag 会自动发布 GitHub Release)。
 
 ## 功能
 
