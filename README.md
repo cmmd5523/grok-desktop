@@ -1,4 +1,4 @@
-﻿# Grok 桌面客户端
+# Grok 桌面客户端
 
 ![Build](https://github.com/cmmd5523/grok-desktop/actions/workflows/build.yml/badge.svg)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -46,6 +46,7 @@ sudo xattr -dr com.apple.quarantine /Applications/GrokDesktop.app
 ## 功能
 
 - 🖥 独立桌面窗口,深色主题,适配 Windows 10 / 11 与 macOS,界面完整复刻 DeepSeek Harness Desktop 布局(侧边栏 + 消息列 + 悬浮胶囊输入卡);窗口尺寸/位置自动记忆
+- 🔄 **自动更新**:设置 →「检查更新」,自动检测 GitHub 最新 Release,一键下载并引导安装,无需手动去 Releases 页(未签名应用的自研更新器,Win / Mac 均可用)
 - 🎛 **composer 工具栏**(照抄 DSH InputBar):左下角「＋」命令菜单(上传文件 / 压缩历史 / 导出会话 / 模型)、权限选择(只读 / 读写 / 完全访问)、右下角模型选择(模型 + 推理等级 关/低/中/高)、上下文占用圆环、34px 蓝色发送键
 - 🗜 **压缩历史**:把较旧对话交给 Grok 生成摘要并折叠(compact)
 - ⤓ **导出会话**:一键保存为 Markdown 文件

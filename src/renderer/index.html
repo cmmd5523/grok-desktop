@@ -278,6 +278,19 @@
         <input id="clearKeyCheck" type="checkbox">
         <span>清除已保存的 API Key</span>
       </label>
+      <div class="update-section">
+        <div class="update-head">
+          <span class="update-title">🔄 自动更新</span>
+          <button id="checkUpdateBtn" class="btn">检查更新</button>
+        </div>
+        <div class="update-ver" id="updateVerLabel">当前版本 v…</div>
+        <div class="update-status" id="updateStatus"></div>
+        <div id="updateProgressWrap" class="update-progress hidden">
+          <div class="update-bar"><div id="updateBar"></div></div>
+          <span class="update-pct" id="updatePercent">0%</span>
+        </div>
+        <button id="updateInstallBtn" class="btn primary hidden">下载完成,立即安装</button>
+      </div>
       <div class="modal-actions">
         <button id="settingsCancelBtn" class="btn">取消</button>
         <button id="settingsSaveBtn" class="btn primary">保存</button>

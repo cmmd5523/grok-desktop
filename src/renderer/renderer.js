@@ -60,6 +60,13 @@ const els = {
   systemPromptInput: $('#systemPromptInput'),
   settingsCancelBtn: $('#settingsCancelBtn'),
   settingsSaveBtn: $('#settingsSaveBtn'),
+  checkUpdateBtn: $('#checkUpdateBtn'),
+  updateVerLabel: $('#updateVerLabel'),
+  updateStatus: $('#updateStatus'),
+  updateProgressWrap: $('#updateProgressWrap'),
+  updateBar: $('#updateBar'),
+  updatePercent: $('#updatePercent'),
+  updateInstallBtn: $('#updateInstallBtn'),
   toast: $('#toast'),
   authScreen: $('#authScreen'),
   authUserLine: $('#authUserLine'),
@@ -1105,6 +1112,77 @@ async function refreshModels(silent) {
   }
 }
 
+/* ---------------- auto update ---------------- */
+
+let updaterInfo = null; // last update:check result
+let updateDownloadedPath = null;
+
+function updateUi(status, cls) {
+  els.updateStatus.textContent = status || '';
+  els.updateStatus.className = 'update-status' + (cls ? ' ' + cls : '');
+}
+
+function resetUpdateUi() {
+  els.updateProgressWrap.classList.add('hidden');
+  els.updateInstallBtn.classList.add('hidden');
+  updaterInfo = null;
+  updateDownloadedPath = null;
+  updateUi('');
+}
+
+async function runUpdateCheck({ silent } = {}) {
+  resetUpdateUi();
+  updateUi('检查中…');
+  try {
+    const info = await window.grokAPI.checkUpdate();
+    updaterInfo = info;
+    els.updateVerLabel.textContent = `当前版本 v${info.current} · 最新版本 v${info.latest}`;
+    if (info.hasUpdate) {
+      updateUi(`发现新版本 v${info.latest},点击「下载更新」`, 'warn');
+      if (!els.updateInstallBtn.classList.contains('hidden')) els.updateInstallBtn.classList.add('hidden');
+    } else {
+      updateUi('已是最新版本 ✅');
+    }
+  } catch (err) {
+    updateUi((err && err.message) || '检查更新失败,请检查网络', 'err');
+    if (!silent) showToast('检查更新失败:' + ((err && err.message) || '网络错误'));
+  }
+}
+
+async function downloadUpdate() {
+  if (!updaterInfo || !updaterInfo.hasUpdate || !updaterInfo.assetUrl) return;
+  updateUi('正在下载 ' + updaterInfo.assetName + ' …');
+  els.updateProgressWrap.classList.remove('hidden');
+  els.updateBar.style.width = '0%';
+  els.updatePercent.textContent = '0%';
+  try {
+    const r = await window.grokAPI.downloadUpdate({ url: updaterInfo.assetUrl, fileName: updaterInfo.assetName });
+    updateDownloadedPath = r.path;
+    updateUi('下载完成 ✅');
+    els.updateInstallBtn.classList.remove('hidden');
+    els.updateInstallBtn.textContent = process.platform === 'darwin' ? '打开安装包' : '下载完成,立即安装';
+  } catch (err) {
+    updateUi((err && err.message) || '下载失败', 'err');
+    showToast('下载更新失败:' + ((err && err.message) || '网络错误'));
+  }
+}
+
+async function installUpdate() {
+  if (!updateDownloadedPath) return;
+  try {
+    await window.grokAPI.installUpdate({ path: updateDownloadedPath });
+    if (process.platform === 'darwin') {
+      updateUi('已打开安装包,请将 GrokDesktop 拖入「应用程序」后重新打开', 'ok');
+      showToast('请将 App 拖入应用程序文件夹');
+    } else {
+      updateUi('安装程序已启动,安装完成后重新打开即可(旧版数据会保留)');
+      showToast('安装程序已启动,请按提示完成安装');
+    }
+  } catch (err) {
+    updateUi((err && err.message) || '启动安装失败', 'err');
+  }
+}
+
 /* ---------------- settings ---------------- */
 
 function openSettings() {
@@ -1117,6 +1195,16 @@ function openSettings() {
     : '留空则使用内置默认 Key';
   els.settingsModal.classList.remove('hidden');
   els.apiKeyInput.focus();
+  // 静默刷新版本号(不弹提示)
+  window.grokAPI.checkUpdate().then((info) => {
+    els.updateVerLabel.textContent = `当前版本 v${info.current} · 最新版本 v${info.latest}`;
+    if (info.hasUpdate) {
+      updaterInfo = info;
+      updateUi(`发现新版本 v${info.latest}`, 'warn');
+    }
+  }).catch(() => {
+    /* 网络不可用时静默,不打扰设置 */
+  });
 }
 
 function closeSettings() {
@@ -1238,6 +1326,13 @@ function wireEvents() {
 
   els.settingsCancelBtn.addEventListener('click', closeSettings);
   els.settingsSaveBtn.addEventListener('click', saveSettings);
+  els.checkUpdateBtn.addEventListener('click', () => runUpdateCheck({ silent: false }));
+  els.updateInstallBtn.addEventListener('click', installUpdate);
+  window.grokAPI.onUpdateProgress((p) => {
+    const pct = typeof p.percent === 'number' ? p.percent : 0;
+    els.updateBar.style.width = pct + '%';
+    els.updatePercent.textContent = pct + '%';
+  });
   els.settingsModal.addEventListener('click', (e) => {
     if (e.target === els.settingsModal) closeSettings();
   });

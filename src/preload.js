@@ -23,6 +23,14 @@ contextBridge.exposeInMainWorld('grokAPI', {
   authDeviceLogin: () => ipcRenderer.invoke('auth:deviceLogin'),
   authDevicePoll: (payload) => ipcRenderer.invoke('auth:devicePoll', payload),
   reportUsage: (payload) => ipcRenderer.invoke('usage:report', payload),
+  checkUpdate: () => ipcRenderer.invoke('update:check'),
+  downloadUpdate: (payload) => ipcRenderer.invoke('update:download', payload),
+  installUpdate: (payload) => ipcRenderer.invoke('update:install', payload),
+  onUpdateProgress: (callback) => {
+    const listener = (_event, data) => callback(data);
+    ipcRenderer.on('update:progress', listener);
+    return () => ipcRenderer.removeListener('update:progress', listener);
+  },
   onChatDelta: (callback) => {
     const listener = (_event, data) => callback(data);
     ipcRenderer.on('chat:delta', listener);

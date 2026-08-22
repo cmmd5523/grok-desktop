@@ -1569,6 +1569,69 @@ body {
   cursor: pointer;
 }
 
+.update-section {
+  margin-top: 18px;
+  padding: 12px 14px;
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.08));
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.03);
+}
+.update-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.update-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--label-primary);
+}
+.update-ver {
+  margin-top: 8px;
+  font-size: 12px;
+  color: var(--label-caption);
+}
+.update-status {
+  margin-top: 8px;
+  font-size: 12px;
+  color: var(--label-secondary);
+  min-height: 16px;
+}
+.update-status.warn { color: var(--warn, #f59e0b); }
+.update-status.err { color: var(--danger, #ef4444); }
+.update-status.ok { color: var(--success, #22c55e); }
+.update-progress {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 10px;
+}
+.update-bar {
+  flex: 1;
+  height: 6px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.1);
+  overflow: hidden;
+}
+.update-bar > div {
+  height: 100%;
+  width: 0%;
+  border-radius: 3px;
+  background: var(--accent, #3b82f6);
+  transition: width 0.15s linear;
+}
+.update-pct {
+  font-size: 12px;
+  color: var(--label-caption);
+  min-width: 38px;
+  text-align: right;
+}
+#updateInstallBtn {
+  margin-top: 10px;
+  width: 100%;
+}
+
 .modal-actions {
   display: flex;
   justify-content: flex-end;

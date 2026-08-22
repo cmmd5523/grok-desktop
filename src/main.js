@@ -1,6 +1,7 @@
-﻿const { app, BrowserWindow, Menu, ipcMain, shell, safeStorage, dialog, screen } = require('electron');
+const { app, BrowserWindow, Menu, ipcMain, shell, safeStorage, dialog, screen, net } = require('electron');
 const path = require('path');
 const fs = require('fs');
+const { finished } = require('stream/promises');
 const { createStore } = require('./store');
 const { streamChat, completeChat, listModels, ApiError } = require('./api');
 
@@ -383,6 +384,92 @@ function saveWindowBounds(win) {
   const b = win.getBounds();
   settingsStore.set({ ...settingsStore.get(), windowBounds: { x: b.x, y: b.y, width: b.width, height: b.height } });
 }
+
+/* ---------------- auto update (GitHub Releases) ---------------- */
+
+const UPDATE_REPO = 'cmmd5523/grok-desktop';
+
+function semverGt(a, b) {
+  const pa = String(a).replace(/^v/, '').split('.').map((n) => parseInt(n, 10) || 0);
+  const pb = String(b).replace(/^v/, '').split('.').map((n) => parseInt(n, 10) || 0);
+  for (let i = 0; i < 3; i++) {
+    if ((pa[i] || 0) !== (pb[i] || 0)) return (pa[i] || 0) > (pb[i] || 0);
+  }
+  return false;
+}
+
+// Pick the right installer asset for this platform/arch from a GitHub release.
+function pickUpdateAsset(assets) {
+  if (!Array.isArray(assets)) return null;
+  if (process.platform === 'win32') {
+    return assets.find((a) => /Setup.*\.exe$/i.test(a.name)) || assets.find((a) => /\.exe$/i.test(a.name)) || null;
+  }
+  if (process.platform === 'darwin') {
+    const isArm = process.arch === 'arm64';
+    const dmg = assets.find((a) => a.name.endsWith('.dmg') && (isArm ? a.name.includes('arm64') : !a.name.includes('arm64')));
+    if (dmg) return dmg;
+    return assets.find((a) => a.name.endsWith('.dmg')) || null;
+  }
+  return null;
+}
+
+ipcMain.handle('update:check', async () => {
+  const res = await net.fetch(`https://api.github.com/repos/${UPDATE_REPO}/releases/latest`, {
+    headers: { 'User-Agent': 'GrokDesktop-Updater', Accept: 'application/vnd.github+json' },
+  });
+  if (!res.ok) throw new Error('检查更新失败(HTTP ' + res.status + ')');
+  const rel = await res.json();
+  const latest = String(rel.tag_name || '').replace(/^v/, '');
+  const current = app.getVersion();
+  const asset = pickUpdateAsset(rel.assets || []);
+  return {
+    current,
+    latest,
+    hasUpdate: semverGt(latest, current),
+    assetName: asset ? asset.name : '',
+    assetUrl: asset ? asset.browser_download_url : '',
+    assetSize: asset ? asset.size : 0,
+    releaseUrl: rel.html_url || '',
+  };
+});
+
+ipcMain.handle('update:download', async (_event, { url, fileName }) => {
+  const dest = path.join(app.getPath('temp'), fileName);
+  const part = dest + '.part';
+  fs.rmSync(part, { force: true });
+  const res = await net.fetch(url);
+  if (!res.ok) throw new Error('下载失败(HTTP ' + res.status + ')');
+  const total = Number(res.headers.get('content-length')) || 0;
+  const reader = res.body.getReader();
+  const file = fs.createWriteStream(part);
+  let received = 0;
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    if (!file.write(Buffer.from(value))) {
+      await new Promise((resolve) => file.once('drain', resolve));
+    }
+    received += value.length;
+    if (mainWindow) {
+      mainWindow.webContents.send('update:progress', {
+        percent: total ? Math.min(100, Math.round((received / total) * 100)) : 0,
+        received,
+        total,
+      });
+    }
+  }
+  file.end();
+  await finished(file);
+  fs.renameSync(part, dest);
+  return { path: dest, size: received };
+});
+
+ipcMain.handle('update:install', async (_event, { path: p }) => {
+  if (!p || !fs.existsSync(p)) throw new Error('安装包不存在,请重新下载');
+  const r = await shell.openPath(p);
+  if (r) throw new Error('启动安装程序失败:' + r);
+  return { ok: true };
+});
 
 /* ---------------- IPC ---------------- */
 
