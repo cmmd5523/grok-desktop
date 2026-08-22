@@ -10,6 +10,55 @@
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+  <div id="authScreen" class="auth-screen hidden">
+    <div class="auth-card">
+      <div class="brand-mark auth-brand">
+        <svg viewBox="0 0 100 100" width="24" height="24" aria-hidden="true">
+          <path fill="#fff" d="M50 12 L55.55 38.6 L78.28 23.72 L63.4 46.45 L90 52 L63.4 57.55 L78.28 80.28 L55.55 65.4 L50 92 L44.45 65.4 L21.72 80.28 L36.6 57.55 L10 52 L36.6 46.45 L21.72 23.72 L44.45 38.6 Z"></path>
+        </svg>
+      </div>
+      <h1 class="auth-title">Grok 桌面客户端</h1>
+      <p class="auth-sub">登录后即可使用(需邮箱验证)</p>
+
+      <div class="auth-tabs">
+        <button type="button" class="auth-tab active" data-atab="login">登录</button>
+        <button type="button" class="auth-tab" data-atab="register">注册</button>
+      </div>
+
+      <form id="authFormLogin" class="auth-form">
+        <label>邮箱</label>
+        <input type="email" id="authLoginEmail" placeholder="you@example.com" autocomplete="email">
+        <label>密码</label>
+        <input type="password" id="authLoginPassword" placeholder="••••••••" autocomplete="current-password">
+        <button type="submit" class="auth-btn">登录</button>
+        <div class="auth-hint" id="authLoginHint"></div>
+      </form>
+
+      <form id="authFormRegister" class="auth-form hidden">
+        <label>邮箱</label>
+        <input type="email" id="authRegEmail" placeholder="you@example.com">
+        <label>昵称(可选)</label>
+        <input type="text" id="authRegName" placeholder="你的昵称">
+        <label>密码(至少 6 位)</label>
+        <input type="password" id="authRegPassword" placeholder="••••••••">
+        <button type="submit" class="auth-btn">注册</button>
+        <div class="auth-hint" id="authRegHint"></div>
+      </form>
+
+      <div id="authVerifyPanel" class="auth-verify hidden">
+        <p class="auth-note">注册成功!验证码由管理员提供(登录管理后台「待验证用户」查看),输入后即可激活账号。</p>
+        <form id="authFormVerify" class="auth-form">
+          <label>邮箱</label>
+          <input type="email" id="authVerifyEmail" readonly>
+          <label>6 位验证码</label>
+          <input type="text" id="authVerifyCode" maxlength="6" inputmode="numeric" placeholder="••••••">
+          <button type="submit" class="auth-btn">验证并进入</button>
+          <div class="auth-hint" id="authVerifyHint"></div>
+        </form>
+      </div>
+    </div>
+  </div>
+
   <div id="app">
     <aside id="sidebar">
       <div class="sidebar-top">
@@ -28,7 +77,9 @@
       </div>
       <nav id="convList" class="conv-list"></nav>
       <div class="sidebar-foot">
+        <div class="auth-user-line" id="authUserLine" title="当前登录账号"></div>
         <button id="settingsBtn" class="side-btn" title="设置">⚙ 设置</button>
+        <button id="logoutBtn" class="side-btn" title="退出登录">⏻ 退出</button>
       </div>
     </aside>
 

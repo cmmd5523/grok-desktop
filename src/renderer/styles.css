@@ -120,6 +120,89 @@ body {
 }
 
 /* ============================================================================
+   Auth screen (login / register / verify)
+   ========================================================================== */
+
+.auth-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-base, #131317);
+}
+.auth-card {
+  width: 380px;
+  max-width: 92vw;
+  background: var(--surface, #1b1b20);
+  border: 1px solid var(--border-l1, #2e2e36);
+  border-radius: 16px;
+  padding: 30px 28px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, .45);
+}
+.auth-brand {
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  background: linear-gradient(160deg, #2b2b30, #0d0d10);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.auth-title { font-size: 19px; margin: 14px 0 2px; text-align: center; color: var(--text-1, #e8e8ea); }
+.auth-sub { font-size: 12px; color: var(--text-2, #9a9aa3); text-align: center; margin-bottom: 16px; }
+.auth-tabs { display: flex; gap: 8px; margin-bottom: 14px; }
+.auth-tab {
+  flex: 1;
+  padding: 8px;
+  border-radius: 8px;
+  border: 1px solid var(--border-l1, #2e2e36);
+  background: transparent;
+  color: var(--text-2, #9a9aa3);
+  cursor: pointer;
+  font-size: 13px;
+}
+.auth-tab.active { background: var(--surface-hover, #24242b); color: var(--text-1, #e8e8ea); border-color: #3b82f6; }
+.auth-form label { display: block; margin: 10px 0 4px; color: var(--text-2, #9a9aa3); font-size: 12px; }
+.auth-form input {
+  width: 100%;
+  padding: 9px 11px;
+  border-radius: 8px;
+  border: 1px solid var(--border-l1, #2e2e36);
+  background: var(--bg-base, #131317);
+  color: var(--text-1, #e8e8ea);
+  font-size: 14px;
+}
+.auth-form input:focus { outline: none; border-color: #3b82f6; }
+.auth-btn {
+  width: 100%;
+  margin-top: 14px;
+  padding: 10px;
+  border-radius: 8px;
+  border: none;
+  background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.auth-btn:hover { filter: brightness(1.1); }
+.auth-btn:disabled { opacity: .5; cursor: not-allowed; }
+.auth-hint { margin-top: 8px; font-size: 12px; color: #e6c76c; min-height: 14px; white-space: pre-wrap; }
+.auth-note { font-size: 12px; color: var(--text-2, #9a9aa3); line-height: 1.6; margin-bottom: 6px; }
+.auth-verify { margin-top: 4px; }
+.auth-user-line {
+  font-size: 11px;
+  color: var(--text-2, #9a9aa3);
+  padding: 6px 8px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+}
+
+/* ============================================================================
    App frame: sidebar | center column
    ========================================================================== */
 

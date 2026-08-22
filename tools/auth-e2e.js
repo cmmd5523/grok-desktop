@@ -1,0 +1,116 @@
+// Desktop app auth E2E: real renderer + preload + real login server.
+// 1) Creates+activates a user via the server API, 2) drives the app's login
+// form through the real IPC path, 3) asserts the main UI appears.
+// Run: npx electron tools/auth-e2e.js
+const { app, BrowserWindow, ipcMain } = require('electron');
+const path = require('path');
+
+const ROOT = path.resolve(__dirname, '..');
+const AUTH_BASE = process.env.AUTH_BASE || 'http://md-grok.de5.net';
+let failures = 0;
+const check = (name, ok, extra) => {
+  if (ok) console.log(`PASS  ${name}`);
+  else { failures++; console.log(`FAIL  ${name}  ${extra || ''}`); }
+};
+
+async function serverApi(method, p, body, token) {
+  const res = await fetch(AUTH_BASE + p, {
+    method,
+    headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: 'Bearer ' + token } : {}) },
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  const text = await res.text();
+  let j = null; try { j = JSON.parse(text); } catch {}
+  return { status: res.status, json: j };
+}
+
+app.whenReady().then(async () => {
+  // --- real auth IPC (mirrors src/main.js logic) ---
+  async function authFetch(p, { body, token } = {}) {
+    const res = await fetch(AUTH_BASE + p, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: 'Bearer ' + token } : {}) },
+      body: body ? JSON.stringify(body) : undefined,
+      signal: AbortSignal.timeout(20000),
+    });
+    const text = await res.text();
+    let j = null; try { j = JSON.parse(text); } catch {}
+    if (!res.ok) throw new Error((j && j.error) || `服务器错误(${res.status})`);
+    return j;
+  }
+  let storedToken = '';
+  let storedUser = null;
+  ipcMain.handle('auth:status', () => ({ loggedIn: !!storedToken, user: storedUser }));
+  ipcMain.handle('auth:register', (_e, b) => authFetch('/api/auth/register', { body: b }));
+  ipcMain.handle('auth:verify', async (_e, b) => {
+    const j = await authFetch('/api/auth/verify', { body: b });
+    if (j.token && j.user) { storedToken = j.token; storedUser = j.user; }
+    return j;
+  });
+  ipcMain.handle('auth:login', async (_e, b) => {
+    const j = await authFetch('/api/auth/login', { body: b });
+    if (j.token && j.user) { storedToken = j.token; storedUser = j.user; }
+    return j;
+  });
+  ipcMain.handle('auth:logout', () => { storedToken = ''; storedUser = null; return { ok: true }; });
+  ipcMain.handle('usage:report', () => ({ ok: true }));
+  // other stubs
+  ipcMain.handle('settings:get', () => ({ baseUrl: 'http://127.0.0.1:8000/v1', model: 'grok-4.3-fast', effort: 'off', systemPrompt: '', hasApiKey: true, apiKeyMask: '…chen' }));
+  ipcMain.handle('settings:set', () => ({}));
+  ipcMain.handle('conversations:list', () => []);
+  ipcMain.handle('conversations:get', () => null);
+  ipcMain.handle('conversations:save', () => true);
+  ipcMain.handle('conversations:delete', () => true);
+  ipcMain.handle('models:list', () => ['grok-4.3-fast']);
+  ipcMain.handle('files:select', () => []);
+  ipcMain.handle('chat:compact', () => ({}));
+  ipcMain.handle('conversation:export', () => ({}));
+  ipcMain.handle('chat:start', () => new Promise((r) => setTimeout(() => r({ usage: null }), 100)));
+  ipcMain.handle('chat:stop', () => true);
+
+  try {
+    // create + activate a user via the server
+    const email = 'desk' + Date.now() + '@demo.com';
+    const reg = await serverApi('POST', '/api/auth/register', { email, password: 'test123456', name: '桌面用户' });
+    check('server register', reg.status === 201 && /^\d{6}$/.test(reg.json.demoCode || ''), reg.status + ' ' + JSON.stringify(reg.json).slice(0, 80));
+    const ver = await serverApi('POST', '/api/auth/verify', { email, code: reg.json.demoCode });
+    check('server verify', ver.status === 200 && !!ver.json.token, ver.status);
+
+    const win = new BrowserWindow({
+      show: false,
+      webPreferences: {
+        preload: path.join(ROOT, 'src', 'preload.js'),
+        contextIsolation: true,
+        nodeIntegration: false,
+        sandbox: true,
+      },
+    });
+    await win.loadFile(path.join(ROOT, 'src', 'renderer', 'index.html'));
+    const run = (code) => win.webContents.executeJavaScript(code, true);
+
+    // login screen shows
+    const authVisible = await run(`!document.getElementById('authScreen').classList.contains('hidden') && !document.getElementById('app').classList.contains('hidden') === false`);
+    check('login screen shown when logged out', authVisible);
+
+    // fill login form and submit (real IPC -> real server)
+    const result = await run(`(async () => {
+      const setVal = (id, v) => { const el = document.getElementById(id); el.value = v; el.dispatchEvent(new Event('input')); };
+      setVal('authLoginEmail', '${email}');
+      setVal('authLoginPassword', 'test123456');
+      document.getElementById('authFormLogin').requestSubmit();
+      await new Promise((r) => setTimeout(r, 2500));
+      return {
+        appVisible: !document.getElementById('app').classList.contains('hidden'),
+        authHidden: document.getElementById('authScreen').classList.contains('hidden'),
+        userLine: document.getElementById('authUserLine').textContent,
+      };
+    })()`);
+    check('login enters main UI', result.appVisible && result.authHidden, JSON.stringify(result));
+    check('sidebar shows logged-in user', result.userLine.includes(email), result.userLine);
+  } catch (err) {
+    check('auth e2e run', false, String((err && err.stack) || err));
+  }
+
+  console.log(failures === 0 ? '\nALL AUTH E2E PASS' : `\n${failures} AUTH E2E FAILED`);
+  app.exit(failures === 0 ? 0 : 1);
+});

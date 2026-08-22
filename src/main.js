@@ -20,7 +20,7 @@ function loadDefaultConfig() {
     }
   }
 }
-const { DEFAULT_BASE_URL, DEFAULT_API_KEY } = loadDefaultConfig();
+const { DEFAULT_BASE_URL, DEFAULT_API_KEY, DEFAULT_AUTH_URL } = loadDefaultConfig();
 const DEFAULT_MODEL = 'grok-4.3-fast';
 
 let mainWindow = null;
@@ -60,6 +60,85 @@ function maskSecret(value) {
   if (plain.length <= 8) return '****';
   return plain.slice(0, 4) + '…' + plain.slice(-4);
 }
+
+/* ---------------- auth (login server) ---------------- */
+
+const AUTH_BASE = (DEFAULT_AUTH_URL || 'http://md-grok.de5.net').replace(/\/+$/, '');
+
+async function authFetch(path, { body, token, method = 'POST' } = {}) {
+  if (!AUTH_BASE) throw new Error('未配置登录服务器地址');
+  const res = await fetch(AUTH_BASE + path, {
+    method,
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    body: body ? JSON.stringify(body) : undefined,
+    signal: AbortSignal.timeout(20000),
+  });
+  const text = await res.text();
+  let json = null;
+  try { json = JSON.parse(text); } catch {}
+  if (!res.ok) throw new Error((json && json.error) || `服务器错误(${res.status})`);
+  return json;
+}
+
+function authToken() {
+  return decryptSecret(settingsStore.get().authTokenEnc || '');
+}
+function authUser() {
+  const raw = settingsStore.get().authUser;
+  if (!raw) return null;
+  try { return JSON.parse(raw); } catch { return null; }
+}
+function saveAuth(token, user) {
+  settingsStore.set({
+    ...settingsStore.get(),
+    authTokenEnc: encryptSecret(token || ''),
+    authUser: user ? JSON.stringify(user) : '',
+  });
+}
+
+ipcMain.handle('auth:status', () => {
+  const user = authUser();
+  return { loggedIn: !!authToken() && !!user, user };
+});
+
+ipcMain.handle('auth:register', async (_event, { email, password, name }) => {
+  const json = await authFetch('/api/auth/register', { body: { email, password, name } });
+  return { message: json.message, demoCode: json.demoCode, email: json.email };
+});
+
+ipcMain.handle('auth:verify', async (_event, { email, code }) => {
+  const json = await authFetch('/api/auth/verify', { body: { email, code } });
+  if (json.token && json.user) saveAuth(json.token, json.user);
+  return { user: json.user, token: json.token };
+});
+
+ipcMain.handle('auth:login', async (_event, { email, password }) => {
+  const json = await authFetch('/api/auth/login', { body: { email, password } });
+  if (json.token && json.user) saveAuth(json.token, json.user);
+  return { user: json.user, token: json.token };
+});
+
+ipcMain.handle('auth:logout', () => {
+  saveAuth('', null);
+  return { ok: true };
+});
+
+ipcMain.handle('usage:report', async (_event, { model, inTokens, outTokens }) => {
+  const token = authToken();
+  if (!token) return { ok: false };
+  try {
+    await authFetch('/api/me/usage/report', {
+      token,
+      body: { model: String(model || ''), inTokens: Number(inTokens) || 0, outTokens: Number(outTokens) || 0, source: 'desktop' },
+    });
+  } catch (err) {
+    console.error('usage report failed:', err.message);
+  }
+  return { ok: true };
+});
 
 /* ---------------- file helpers ---------------- */
 
@@ -473,6 +552,7 @@ ipcMain.handle('files:select', async () => {
 ipcMain.handle('chat:start', async (event, payload) => {
   const { requestId, model, messages } = payload || {};
   if (!requestId) throw new Error('缺少 requestId');
+  if (!authToken()) throw new Error('请先登录后再使用(Grok 需要邮箱验证登录)');
   const cur = settingsStore.get();
   const apiKey = decryptSecret(cur.apiKeyEnc || '');
   if (!apiKey) throw new Error('尚未设置 API Key,请先在设置中填写');

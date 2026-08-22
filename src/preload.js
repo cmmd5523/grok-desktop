@@ -13,6 +13,12 @@ contextBridge.exposeInMainWorld('grokAPI', {
   exportConversation: (conv) => ipcRenderer.invoke('conversation:export', conv),
   startChat: (payload) => ipcRenderer.invoke('chat:start', payload),
   stopChat: () => ipcRenderer.invoke('chat:stop'),
+  authStatus: () => ipcRenderer.invoke('auth:status'),
+  authRegister: (payload) => ipcRenderer.invoke('auth:register', payload),
+  authVerify: (payload) => ipcRenderer.invoke('auth:verify', payload),
+  authLogin: (payload) => ipcRenderer.invoke('auth:login', payload),
+  authLogout: () => ipcRenderer.invoke('auth:logout'),
+  reportUsage: (payload) => ipcRenderer.invoke('usage:report', payload),
   onChatDelta: (callback) => {
     const listener = (_event, data) => callback(data);
     ipcRenderer.on('chat:delta', listener);

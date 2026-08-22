@@ -60,6 +60,13 @@ ipcMain.handle('stopChat', () => true);
 ipcMain.handle('files:select', () => []);
 ipcMain.handle('chat:compact', () => ({ summary: 'x' }));
 ipcMain.handle('conversation:export', () => ({ canceled: true }));
+// Auth stubs: pretend already logged in so the app enters the main UI.
+ipcMain.handle('auth:status', () => ({ loggedIn: true, user: { email: 'test@demo.com', name: '测试', role: 'user' } }));
+ipcMain.handle('auth:register', () => ({ email: 'x@demo.com', demoCode: '123456' }));
+ipcMain.handle('auth:verify', () => ({ token: 't', user: { email: 'x@demo.com', role: 'user' } }));
+ipcMain.handle('auth:login', () => ({ token: 't', user: { email: 'test@demo.com', role: 'user' } }));
+ipcMain.handle('auth:logout', () => ({ ok: true }));
+ipcMain.handle('usage:report', () => ({ ok: true }));
 
 app.whenReady().then(async () => {
   const win = new BrowserWindow({

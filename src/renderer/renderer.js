@@ -61,6 +61,19 @@ const els = {
   settingsCancelBtn: $('#settingsCancelBtn'),
   settingsSaveBtn: $('#settingsSaveBtn'),
   toast: $('#toast'),
+  authScreen: $('#authScreen'),
+  authUserLine: $('#authUserLine'),
+  logoutBtn: $('#logoutBtn'),
+  authLoginEmail: $('#authLoginEmail'),
+  authLoginPassword: $('#authLoginPassword'),
+  authLoginHint: $('#authLoginHint'),
+  authRegEmail: $('#authRegEmail'),
+  authRegName: $('#authRegName'),
+  authRegPassword: $('#authRegPassword'),
+  authRegHint: $('#authRegHint'),
+  authVerifyEmail: $('#authVerifyEmail'),
+  authVerifyCode: $('#authVerifyCode'),
+  authVerifyHint: $('#authVerifyHint'),
 };
 
 // Fallback list (console models excluded — the gateway drops their tools and
@@ -110,6 +123,7 @@ const state = {
   pending: null, // { msg, mdEl, raw, rafPending }
   pendingFiles: [], // [{name,size,mime,dataUri}] to attach on next send
   toastTimer: null,
+  auth: { loggedIn: false, user: null },
 };
 
 const CONTEXT_WINDOW = 131072; // 128K context window for the occupancy ring
@@ -878,6 +892,11 @@ function buildPayloadMessages(conv) {
 async function send() {
   const text = els.input.value.trim();
   if ((!text && !state.pendingFiles.length) || state.streaming) return;
+  if (!state.auth.loggedIn) {
+    showToast('请先登录后再使用');
+    showAuthScreen();
+    return;
+  }
   if (!state.settings.hasApiKey) {
     showToast('未配置 API Key,请在设置中填写');
     openSettings();
@@ -1021,6 +1040,14 @@ async function streamReply(conv) {
     state.requestId = null;
     setStreamingUI(false);
     persistConversation(conv);
+    // Report usage to the login server (silent; for the web admin panel).
+    window.grokAPI
+      .reportUsage({
+        model: currentSendModel(),
+        inTokens: assistantMsg.metrics.inTokens,
+        outTokens: assistantMsg.metrics.outTokens,
+      })
+      .catch(() => {});
     scrollToBottom();
     renderStatsLine();
   }
@@ -1236,6 +1263,120 @@ function wireEvents() {
   });
 }
 
+/* ---------------- auth (login required) ---------------- */
+
+function showAuthScreen() {
+  els.app.classList.add('hidden');
+  els.authScreen.classList.remove('hidden');
+}
+function showAppScreen() {
+  els.authScreen.classList.add('hidden');
+  els.app.classList.remove('hidden');
+  const u = state.auth.user;
+  els.authUserLine.textContent = u ? `${u.email}${u.role === 'admin' ? '(管理员)' : ''}` : '';
+}
+
+function setAuthTab(tab) {
+  document.querySelectorAll('.auth-tab').forEach((b) => b.classList.toggle('active', b.dataset.atab === tab));
+  els.authLoginEmail.closest('form').classList.toggle('hidden', tab !== 'login');
+  els.authRegEmail.closest('form').classList.toggle('hidden', tab !== 'register');
+  document.getElementById('authVerifyPanel').classList.add('hidden');
+}
+
+function bindAuthEvents() {
+  document.querySelectorAll('.auth-tab').forEach((b) =>
+    b.addEventListener('click', () => setAuthTab(b.dataset.atab))
+  );
+
+  document.getElementById('authFormLogin').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = e.target.querySelector('button[type=submit]');
+    els.authLoginHint.textContent = '登录中…';
+    btn.disabled = true;
+    try {
+      const res = await window.grokAPI.authLogin({
+        email: els.authLoginEmail.value.trim(),
+        password: els.authLoginPassword.value,
+      });
+      if (!res || !res.token) throw new Error('登录失败');
+      state.auth = { loggedIn: true, user: res.user };
+      showAppScreen();
+      els.authLoginHint.textContent = '';
+    } catch (err) {
+      els.authLoginHint.textContent = (err && err.message) || '登录失败';
+    } finally {
+      btn.disabled = false;
+    }
+  });
+
+  document.getElementById('authFormRegister').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = e.target.querySelector('button[type=submit]');
+    els.authRegHint.textContent = '注册中…';
+    btn.disabled = true;
+    try {
+      const res = await window.grokAPI.authRegister({
+        email: els.authRegEmail.value.trim(),
+        name: els.authRegName.value.trim(),
+        password: els.authRegPassword.value,
+      });
+      if (!res || !res.email) throw new Error('注册失败');
+      els.authVerifyEmail.value = res.email;
+      els.authRegEmail.closest('form').classList.add('hidden');
+      document.getElementById('authVerifyPanel').classList.remove('hidden');
+      els.authRegHint.textContent = '';
+    } catch (err) {
+      els.authRegHint.textContent = (err && err.message) || '注册失败';
+    } finally {
+      btn.disabled = false;
+    }
+  });
+
+  document.getElementById('authFormVerify').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = e.target.querySelector('button[type=submit]');
+    els.authVerifyHint.textContent = '验证中…';
+    btn.disabled = true;
+    try {
+      const res = await window.grokAPI.authVerify({
+        email: els.authVerifyEmail.value.trim(),
+        code: els.authVerifyCode.value.trim(),
+      });
+      if (!res || !res.token) throw new Error('验证失败');
+      state.auth = { loggedIn: true, user: res.user };
+      showAppScreen();
+      els.authVerifyHint.textContent = '';
+    } catch (err) {
+      els.authVerifyHint.textContent = (err && err.message) || '验证失败';
+    } finally {
+      btn.disabled = false;
+    }
+  });
+
+  els.logoutBtn.addEventListener('click', async () => {
+    try {
+      await window.grokAPI.authLogout();
+    } catch {}
+    state.auth = { loggedIn: false, user: null };
+    state.currentId = null;
+    state.current = null;
+    state.pending = null;
+    showAuthScreen();
+  });
+}
+
+async function checkAuth() {
+  try {
+    const status = await window.grokAPI.authStatus();
+    state.auth = { loggedIn: !!(status && status.loggedIn), user: (status && status.user) || null };
+  } catch (err) {
+    console.error('authStatus failed:', err);
+    state.auth = { loggedIn: false, user: null };
+  }
+  if (state.auth.loggedIn) showAppScreen();
+  else showAuthScreen();
+}
+
 /* ---------------- init ---------------- */
 
 async function init() {
@@ -1245,6 +1386,9 @@ async function init() {
   } catch (err) {
     console.error('getSettings failed:', err);
   }
+
+  bindAuthEvents();
+  await checkAuth();
 
   applyModels(state.models);
   wireEvents();

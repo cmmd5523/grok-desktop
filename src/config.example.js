@@ -4,4 +4,5 @@
 module.exports = {
   DEFAULT_BASE_URL: '', // 例如 http://127.0.0.1:8000/v1
   DEFAULT_API_KEY: '',
+  DEFAULT_AUTH_URL: '', // 例如 http://127.0.0.1:8001(登录服务器,可留空仅用网页版)
 };
