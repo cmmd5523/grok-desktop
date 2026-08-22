@@ -67,6 +67,8 @@ ipcMain.handle('auth:verify', () => ({ token: 't', user: { email: 'x@demo.com', 
 ipcMain.handle('auth:login', () => ({ token: 't', user: { email: 'test@demo.com', role: 'user' } }));
 ipcMain.handle('auth:logout', () => ({ ok: true }));
 ipcMain.handle('auth:config', () => ({ turnstileSiteKey: '' }));
+ipcMain.handle('auth:deviceLogin', () => ({ deviceId: 'test-device' }));
+ipcMain.handle('auth:devicePoll', () => ({ approved: false }));
 ipcMain.handle('usage:report', () => ({ ok: true }));
 
 app.whenReady().then(async () => {

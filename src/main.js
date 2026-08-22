@@ -128,6 +128,31 @@ ipcMain.handle('auth:openRegister', async () => {
   return { ok: true };
 });
 
+// Browser login: open the web login page with a one-time device id; the user
+// logs in (or is already logged in) there and the page approves the device.
+// The renderer polls auth:devicePoll until the session is granted.
+ipcMain.handle('auth:deviceLogin', async () => {
+  const deviceId = crypto.randomUUID();
+  const url = (AUTH_BASE || 'http://md-grok.de5.net').replace(/\/+$/, '') + '/#/login?device=' + deviceId;
+  try {
+    await shell.openExternal(url);
+  } catch (err) {
+    console.error('openExternal failed:', err);
+    throw new Error('无法打开浏览器,请手动访问 ' + url);
+  }
+  return { deviceId };
+});
+
+ipcMain.handle('auth:devicePoll', async (_event, { deviceId }) => {
+  if (!deviceId) return { approved: false };
+  const json = await authFetch(`/api/auth/device/poll?device=${encodeURIComponent(deviceId)}`, { method: 'GET' });
+  if (json && json.approved && json.token && json.user) {
+    saveAuth(json.token, json.user);
+    return { approved: true, user: json.user };
+  }
+  return { approved: false };
+});
+
 ipcMain.handle('auth:verify', async (_event, { email, code }) => {
   const json = await authFetch('/api/auth/verify', { body: { email, code } });
   if (json.token && json.user) saveAuth(json.token, json.user);

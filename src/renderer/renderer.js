@@ -1394,6 +1394,50 @@ function bindAuthEvents() {
   document.getElementById('openWebRegBtn').addEventListener('click', () => {
     window.grokAPI.authOpenRegister().catch(() => {});
   });
+
+  // Browser login: open web login page, poll until the device is approved.
+  const authDevicePanel = document.getElementById('authDevicePanel');
+  let devicePollTimer = null;
+  async function stopDevicePoll() {
+    if (devicePollTimer) { clearInterval(devicePollTimer); devicePollTimer = null; }
+    authDevicePanel.classList.add('hidden');
+    els.authLoginEmail.closest('form').classList.remove('hidden');
+  }
+  document.getElementById('authBrowserLoginBtn').addEventListener('click', async () => {
+    const btn = document.getElementById('authBrowserLoginBtn');
+    btn.disabled = true;
+    try {
+      const { deviceId } = await window.grokAPI.authDeviceLogin();
+      if (!deviceId) throw new Error('无法启动浏览器登录');
+      els.authLoginEmail.closest('form').classList.add('hidden');
+      authDevicePanel.classList.remove('hidden');
+      document.getElementById('authDeviceHint').textContent = '';
+      const t0 = Date.now();
+      devicePollTimer = setInterval(async () => {
+        try {
+          const res = await window.grokAPI.authDevicePoll({ deviceId });
+          if (res && res.approved && res.user) {
+            stopDevicePoll();
+            state.auth = { loggedIn: true, user: res.user };
+            showAppScreen();
+            return;
+          }
+        } catch {}
+        if (Date.now() - t0 > 2 * 60 * 1000) {
+          stopDevicePoll();
+          document.getElementById('authDeviceHint').textContent = '等待超时,请重试';
+          btn.disabled = false;
+        }
+      }, 1500);
+    } catch (err) {
+      els.authLoginHint.textContent = (err && err.message) || '无法启动浏览器登录';
+      btn.disabled = false;
+    }
+  });
+  document.getElementById('authDeviceCancelBtn').addEventListener('click', () => {
+    stopDevicePoll();
+    document.getElementById('authBrowserLoginBtn').disabled = false;
+  });
 }
 
 async function checkAuth() {

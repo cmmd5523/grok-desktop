@@ -31,8 +31,15 @@
         <label>密码</label>
         <input type="password" id="authLoginPassword" placeholder="••••••••" autocomplete="current-password">
         <button type="submit" class="auth-btn">登录</button>
+        <button type="button" id="authBrowserLoginBtn" class="auth-btn auth-btn-ghost">🌐 使用浏览器登录</button>
         <div class="auth-hint" id="authLoginHint"></div>
       </form>
+
+      <div id="authDevicePanel" class="hidden">
+        <div class="auth-note">已在浏览器打开登录页:<br>请在浏览器中完成登录(若已登录将自动授权),桌面端会自动同步登录…</div>
+        <button type="button" id="authDeviceCancelBtn" class="auth-btn auth-btn-ghost">取消</button>
+        <div class="auth-hint" id="authDeviceHint"></div>
+      </div>
 
       <form id="authFormRegister" class="auth-form hidden">
         <div class="auth-note reg-guide">

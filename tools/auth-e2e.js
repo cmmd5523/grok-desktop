@@ -54,6 +54,8 @@ app.whenReady().then(async () => {
   });
   ipcMain.handle('auth:logout', () => { storedToken = ''; storedUser = null; return { ok: true }; });
   ipcMain.handle('auth:openRegister', () => ({ ok: true }));
+  ipcMain.handle('auth:deviceLogin', () => ({ deviceId: 'e2e-device' }));
+  ipcMain.handle('auth:devicePoll', () => ({ approved: false }));
   ipcMain.handle('auth:config', async () => {
     const j = await authFetch('/api/auth/config', { method: 'GET' });
     return { turnstileSiteKey: (j && j.turnstileSiteKey) || '' };
