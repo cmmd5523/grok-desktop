@@ -1273,11 +1273,12 @@ async function maybeRenderTurnstile() {
   try {
     const cfg = await window.grokAPI.authConfig();
     const siteKey = cfg && cfg.turnstileSiteKey;
-    if (!siteKey || typeof window.turnstile !== 'function') return;
+    if (!siteKey || typeof window.turnstile !== 'object' || typeof window.turnstile.render !== 'function') return;
     turnstileRendered = true;
     window.turnstile.render(document.getElementById('turnstileReg'), {
       sitekey: siteKey,
       theme: 'dark',
+      action: 'signup',
       callback: (token) => { turnstileToken = token; },
       'expired-callback': () => { turnstileToken = ''; },
       'error-callback': () => { turnstileToken = ''; },

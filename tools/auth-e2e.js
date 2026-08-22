@@ -70,12 +70,17 @@ app.whenReady().then(async () => {
   ipcMain.handle('chat:stop', () => true);
 
   try {
-    // create + activate a user via the server
+    // Create an activated user via the ADMIN API (registration now requires
+    // Turnstile, which is covered by grok-server/tools/turnstile-e2e.js).
+    const adminEmail = process.env.AUTH_ADMIN_EMAIL || 'admin@grok.local';
+    const adminPw = process.env.ADMIN_TEST_PASSWORD || 'wrong-pw';
+    const adminLogin = await serverApi('POST', '/api/auth/login', { email: adminEmail, password: adminPw });
+    check('admin login', adminLogin.status === 200 && !!adminLogin.json.token, adminLogin.status + ' ' + JSON.stringify(adminLogin.json).slice(0, 80));
     const email = 'desk' + Date.now() + '@demo.com';
-    const reg = await serverApi('POST', '/api/auth/register', { email, password: 'test123456', name: '桌面用户' });
-    check('server register', reg.status === 201 && /^\d{6}$/.test(reg.json.demoCode || ''), reg.status + ' ' + JSON.stringify(reg.json).slice(0, 80));
-    const ver = await serverApi('POST', '/api/auth/verify', { email, code: reg.json.demoCode });
-    check('server verify', ver.status === 200 && !!ver.json.token, ver.status);
+    const mk = await serverApi('POST', '/api/admin/users', {
+      email, password: 'test123456', name: '桌面用户', role: 'user', activate: true,
+    }, adminLogin.json.token);
+    check('admin creates activated user', mk.status === 201, mk.status + ' ' + JSON.stringify(mk.json).slice(0, 80));
 
     const win = new BrowserWindow({
       show: false,
