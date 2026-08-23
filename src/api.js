@@ -132,13 +132,15 @@ async function listModels(baseUrl, apiKey) {
     .filter((id) => typeof id === 'string' && id.trim());
 }
 
-async function streamChat({ baseUrl, apiKey, model, messages, signal, onDelta }) {
+async function streamChat({ baseUrl, apiKey, model, messages, signal, onDelta, url }) {
   if (!apiKey) throw new Error('缺少 API Key');
   if (!model) throw new Error('未选择模型');
 
-  const url = `${normalizeBaseUrl(baseUrl)}/chat/completions`;
+  // SSO mode: pass an explicit endpoint (e.g. the login server's /api/chat)
+  // and use the session JWT as the bearer token instead of a raw API key.
+  const resolvedUrl = url || `${normalizeBaseUrl(baseUrl)}/chat/completions`;
   const res = await fetchWithConnectTimeout(
-    url,
+    resolvedUrl,
     {
       method: 'POST',
       headers: {

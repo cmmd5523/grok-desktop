@@ -1055,13 +1055,16 @@ async function streamReply(conv) {
     setStreamingUI(false);
     persistConversation(conv);
     // Report usage to the login server (silent; for the web admin panel).
-    window.grokAPI
-      .reportUsage({
-        model: currentSendModel(),
-        inTokens: assistantMsg.metrics.inTokens,
-        outTokens: assistantMsg.metrics.outTokens,
-      })
-      .catch(() => {});
+    // In SSO mode the server already recorded usage inside /api/chat, so skip.
+    if (!result || !result.sso) {
+      window.grokAPI
+        .reportUsage({
+          model: currentSendModel(),
+          inTokens: assistantMsg.metrics.inTokens,
+          outTokens: assistantMsg.metrics.outTokens,
+        })
+        .catch(() => {});
+    }
     scrollToBottom();
     renderStatsLine();
   }

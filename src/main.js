@@ -629,6 +629,22 @@ ipcMain.handle('conversation:export', async (_event, conv) => {
 });
 
 ipcMain.handle('models:list', async () => {
+  // SSO mode: fetch model list from the login server (JWT-validated).
+  const token = authToken();
+  if (token && AUTH_BASE) {
+    try {
+      const res = await net.fetch(`${AUTH_BASE.replace(/\/+$/, '')}/api/chat/models`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) return [];
+      const j = await res.json();
+      const list = (j.data || []).map((m) => m.id).filter((id) => id && !/console/i.test(id));
+      if (list.length) return list;
+    } catch (err) {
+      console.error('models:list (sso) failed:', err.message);
+    }
+    return [];
+  }
   const cur = settingsStore.get();
   const apiKey = decryptSecret(cur.apiKeyEnc || '');
   if (!apiKey) return [];
@@ -683,10 +699,15 @@ ipcMain.handle('files:select', async () => {
 ipcMain.handle('chat:start', async (event, payload) => {
   const { requestId, model, messages } = payload || {};
   if (!requestId) throw new Error('缺少 requestId');
-  if (!authToken()) throw new Error('请先登录后再使用(Grok 需要邮箱验证登录)');
+  const ssoToken = authToken();
+  if (!ssoToken) throw new Error('请先登录后再使用(Grok 需要邮箱验证登录)');
   const cur = settingsStore.get();
-  const apiKey = decryptSecret(cur.apiKeyEnc || '');
-  if (!apiKey) throw new Error('尚未设置 API Key,请先在设置中填写');
+  // SSO mode needs no local API key (the login server holds the gateway key);
+  // direct mode still requires one.
+  const ssoUrl = ssoToken && AUTH_BASE ? `${AUTH_BASE.replace(/\/+$/, '')}/api/chat` : '';
+  if (!ssoUrl && !decryptSecret(cur.apiKeyEnc || '')) {
+    throw new Error('尚未设置 API Key,请先在设置中填写');
+  }
   if (!Array.isArray(messages) || messages.length === 0) throw new Error('消息为空');
   if (!model) throw new Error('未选择模型');
 
@@ -709,9 +730,13 @@ ipcMain.handle('chat:start', async (event, payload) => {
     if (!resolvedBaseUrl) {
       throw new Error('未配置 API 地址,请先在「设置」中填写网关地址');
     }
+    // SSO mode: chat through the login server's /api/chat with the session
+    // JWT as the bearer token. The server validates the login and forwards
+    // to grok2api internally, so no raw API key ever leaves the machine.
     const usage = await streamChat({
       baseUrl: resolvedBaseUrl,
-      apiKey,
+      apiKey: ssoUrl ? ssoToken : decryptSecret(cur.apiKeyEnc || ''),
+      url: ssoUrl || undefined,
       model,
       messages: fullMessages,
       signal: controller.signal,
@@ -719,7 +744,9 @@ ipcMain.handle('chat:start', async (event, payload) => {
         if (win && !win.isDestroyed()) win.webContents.send('chat:delta', { requestId, delta });
       },
     });
-    return { ok: true, usage: usage || null };
+    return { ok: true, usage: usage || null, sso: !!ssoUrl };
+  } catch (err) {
+    throw friendlyNetError(err);
   } finally {
     if (activeStream && activeStream.requestId === requestId) activeStream = null;
   }
@@ -733,6 +760,26 @@ ipcMain.handle('chat:stop', () => {
   }
   return true;
 });
+
+// Translate raw Chromium/undici network errors into actionable Chinese hints.
+function friendlyNetError(err) {
+  const raw = String((err && err.message) || '');
+  const net = (raw.match(/net::([A-Z_]+)/) || [])[1] || '';
+  if (net === 'ERR_CONNECTION_TIMED_OUT' || /ERR_CONNECTION_TIMED_OUT/.test(raw)) {
+    return new Error('无法连接 API 服务器(连接超时)。请检查:网络是否正常、代理(Clash)是否开启且节点可用;若使用代理,确认已开启系统代理或 TUN 模式。');
+  }
+  if (net === 'ERR_NAME_NOT_RESOLVED' || /ERR_NAME_NOT_RESOLVED/.test(raw)) {
+    return new Error('无法解析 API 服务器域名(DNS 失败),请检查网络或 DNS 设置。');
+  }
+  if (net === 'ERR_CONNECTION_REFUSED' || net === 'ERR_CONNECTION_RESET' || net === 'ERR_EMPTY_RESPONSE') {
+    return new Error('连接被拒绝或重置,请检查网络/代理是否稳定,稍后重试。');
+  }
+  if (net === 'ERR_CERT_AUTHORITY_INVALID' || net === 'ERR_CERT_INVALID' || net === 'ERR_CERT_COMMON_NAME_INVALID') {
+    return new Error('HTTPS 证书校验失败,请检查系统时间或网络环境。');
+  }
+  if (net) return new Error(`网络错误(${net}),请检查网络或代理后重试。`);
+  return err;
+}
 
 /* ---------------- app lifecycle ---------------- */
 
