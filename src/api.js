@@ -1,5 +1,22 @@
 const XAI_BASE_FALLBACK = 'https://api.x.ai/v1';
 const CONNECT_TIMEOUT_MS = 20000;
+const LARGE_BODY_TIMEOUT_MS = 60000;
+
+// Prefer Electron's net.fetch: it uses the Chromium network stack and honors
+// the system proxy (Clash etc.), which the plain Node fetch (undici) ignores.
+// Node fetch can otherwise fail on https endpoints that need a local proxy.
+let electronNet = null;
+try {
+  electronNet = require('electron').net;
+} catch {
+  electronNet = null;
+}
+function doFetch(url, options) {
+  if (electronNet && typeof electronNet.fetch === 'function') {
+    return electronNet.fetch(url, options);
+  }
+  return fetch(url, options);
+}
 
 class ApiError extends Error {
   constructor(message, status, body) {
@@ -43,23 +60,38 @@ function friendlyStatus(status, body) {
 /**
  * fetch with a connect timeout; the user's AbortSignal keeps working
  * after the headers have arrived (used for cancelling long streams).
+ * Large bodies (file uploads) get a longer timeout, and transient network
+ * errors (TypeError: fetch failed) are retried once.
  */
 async function fetchWithConnectTimeout(url, options, signal) {
-  const controller = new AbortController();
-  const onAbort = () => controller.abort();
-  if (signal) {
-    if (signal.aborted) controller.abort();
-    else signal.addEventListener('abort', onAbort, { once: true });
-  }
-  const timer = setTimeout(
-    () => controller.abort(new Error('连接 API 服务器超时,请检查网络或 API 地址')),
-    CONNECT_TIMEOUT_MS
-  );
+  const bodySize = typeof options.body === 'string' ? options.body.length : 0;
+  const timeoutMs = bodySize > 1024 * 1024 ? LARGE_BODY_TIMEOUT_MS : CONNECT_TIMEOUT_MS;
+  const attempt = async () => {
+    const controller = new AbortController();
+    const onAbort = () => controller.abort();
+    if (signal) {
+      if (signal.aborted) controller.abort();
+      else signal.addEventListener('abort', onAbort, { once: true });
+    }
+    const timer = setTimeout(
+      () => controller.abort(new Error('连接 API 服务器超时,请检查网络或 API 地址')),
+      timeoutMs
+    );
+    try {
+      return await doFetch(url, { ...options, signal: controller.signal });
+    } finally {
+      clearTimeout(timer);
+      if (signal) signal.removeEventListener('abort', onAbort);
+    }
+  };
   try {
-    return await fetch(url, { ...options, signal: controller.signal });
-  } finally {
-    clearTimeout(timer);
-    if (signal) signal.removeEventListener('abort', onAbort);
+    return await attempt();
+  } catch (err) {
+    const isAbort = err && (err.name === 'AbortError' || /abort/i.test(String(err.message)));
+    const isNetwork = err && (err.name === 'TypeError' || err instanceof TypeError);
+    if (isAbort || !isNetwork) throw err; // user cancel / timeout / HTTP: no retry
+    await new Promise((r) => setTimeout(r, 800)); // transient network: retry once
+    return await attempt();
   }
 }
 
