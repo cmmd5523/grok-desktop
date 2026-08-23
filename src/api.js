@@ -1,6 +1,6 @@
 const XAI_BASE_FALLBACK = 'https://api.x.ai/v1';
 const CONNECT_TIMEOUT_MS = 20000;
-const LARGE_BODY_TIMEOUT_MS = 60000;
+const LARGE_BODY_TIMEOUT_MS = 180000;
 
 // Prefer Electron's net.fetch: it uses the Chromium network stack and honors
 // the system proxy (Clash etc.), which the plain Node fetch (undici) ignores.
