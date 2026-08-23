@@ -24,6 +24,7 @@ contextBridge.exposeInMainWorld('grokAPI', {
   authDevicePoll: (payload) => ipcRenderer.invoke('auth:devicePoll', payload),
   reportUsage: (payload) => ipcRenderer.invoke('usage:report', payload),
   checkUpdate: () => ipcRenderer.invoke('update:check'),
+  openUpdateDownload: (url) => ipcRenderer.invoke('update:openDownload', url),
   downloadUpdate: (payload) => ipcRenderer.invoke('update:download', payload),
   installUpdate: (payload) => ipcRenderer.invoke('update:install', payload),
   onUpdateProgress: (callback) => {

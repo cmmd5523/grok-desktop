@@ -471,6 +471,15 @@ ipcMain.handle('update:install', async (_event, { path: p }) => {
   return { ok: true };
 });
 
+// Open the release asset download URL in the default browser. The browser's
+// download manager is far more reliable for ~100MB installers (proxy support,
+// resume, no renderer timeout), which is why we prefer it over in-app fetch.
+ipcMain.handle('update:openDownload', async (_event, url) => {
+  if (!/^https?:\/\//i.test(String(url || ''))) throw new Error('下载链接无效');
+  await shell.openExternal(url);
+  return { ok: true };
+});
+
 /* ---------------- IPC ---------------- */
 
 ipcMain.handle('settings:get', () => {

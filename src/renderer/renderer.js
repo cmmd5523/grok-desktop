@@ -1164,21 +1164,16 @@ async function runUpdateCheck({ silent } = {}) {
 async function downloadUpdate() {
   if (!updaterInfo || !updaterInfo.hasUpdate || !updaterInfo.assetUrl) return;
   els.updateDownloadBtn.disabled = true;
-  updateUi('正在下载 ' + updaterInfo.assetName + ' …');
-  els.updateProgressWrap.classList.remove('hidden');
-  els.updateBar.style.width = '0%';
-  els.updatePercent.textContent = '0%';
+  updateUi('正在打开浏览器下载…');
   try {
-    const r = await window.grokAPI.downloadUpdate({ url: updaterInfo.assetUrl, fileName: updaterInfo.assetName });
-    updateDownloadedPath = r.path;
-    updateUi('下载完成 ✅');
+    await window.grokAPI.openUpdateDownload(updaterInfo.assetUrl);
+    updateUi('已在浏览器中打开下载,下载完成后运行安装包即可(旧版数据会保留)', 'ok');
     els.updateDownloadBtn.classList.add('hidden');
-    els.updateInstallBtn.classList.remove('hidden');
-    els.updateInstallBtn.textContent = process.platform === 'darwin' ? '打开安装包' : '下载完成,立即安装';
+    showToast('已在浏览器中打开下载链接');
   } catch (err) {
     els.updateDownloadBtn.disabled = false;
-    updateUi((err && err.message) || '下载失败', 'err');
-    showToast('下载更新失败:' + ((err && err.message) || '网络错误'));
+    updateUi((err && err.message) || '打开浏览器失败', 'err');
+    showToast('打开浏览器失败:' + ((err && err.message) || '网络错误'));
   }
 }
 
