@@ -30,7 +30,17 @@ app.whenReady().then(async () => {
     const models = await run(`window.grokAPI.listModels()`);
     console.log('models:', models.length, '个, 含 fast:', models.includes('grok-4.3-fast'));
 
-    const ok = login && login.user && result.ok && result.sso === true && models.includes('grok-4.3-fast');
+    // IP-direct SSO: set baseUrl to the server IP, SSO must follow it.
+    await run(`window.grokAPI.setSettings({ baseUrl: 'http://154.9.253.182/v1' })`);
+    const ipChat = await run(`window.grokAPI.startChat({
+      requestId: 'e2e-ip-' + Date.now(),
+      model: 'grok-4.3-fast',
+      messages: [{ role: 'user', content: '回复 OK 两个字' }],
+    })`);
+    console.log('IP 直连 SSO chat:', JSON.stringify({ ok: ipChat.ok, sso: ipChat.sso }));
+
+    const ok = login && login.user && result.ok && result.sso === true && models.includes('grok-4.3-fast')
+      && ipChat.ok === true && ipChat.sso === true;
     console.log(ok ? 'ALL SSO E2E PASS' : 'SSO E2E FAILED');
     app.exit(ok ? 0 : 1);
   } catch (err) {

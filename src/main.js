@@ -631,9 +631,14 @@ ipcMain.handle('conversation:export', async (_event, conv) => {
 ipcMain.handle('models:list', async () => {
   // SSO mode: fetch model list from the login server (JWT-validated).
   const token = authToken();
-  if (token && AUTH_BASE) {
+  let ssoOrigin = '';
+  try {
+    const cur0 = settingsStore.get();
+    ssoOrigin = new URL(cur0.baseUrl || DEFAULT_BASE_URL).origin;
+  } catch {}
+  if (token && ssoOrigin) {
     try {
-      const res = await net.fetch(`${AUTH_BASE.replace(/\/+$/, '')}/api/chat/models`, {
+      const res = await net.fetch(`${ssoOrigin}/api/chat/models`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (!res.ok) return [];
@@ -702,12 +707,7 @@ ipcMain.handle('chat:start', async (event, payload) => {
   const ssoToken = authToken();
   if (!ssoToken) throw new Error('请先登录后再使用(Grok 需要邮箱验证登录)');
   const cur = settingsStore.get();
-  // SSO mode needs no local API key (the login server holds the gateway key);
-  // direct mode still requires one.
-  const ssoUrl = ssoToken && AUTH_BASE ? `${AUTH_BASE.replace(/\/+$/, '')}/api/chat` : '';
-  if (!ssoUrl && !decryptSecret(cur.apiKeyEnc || '')) {
-    throw new Error('尚未设置 API Key,请先在设置中填写');
-  }
+  // SSO mode needs no local API key (the login server holds the gateway key).
   if (!Array.isArray(messages) || messages.length === 0) throw new Error('消息为空');
   if (!model) throw new Error('未选择模型');
 
@@ -733,6 +733,13 @@ ipcMain.handle('chat:start', async (event, payload) => {
     // SSO mode: chat through the login server's /api/chat with the session
     // JWT as the bearer token. The server validates the login and forwards
     // to grok2api internally, so no raw API key ever leaves the machine.
+    // The SSO origin follows the configured base URL (direct server IP or
+    // https domain), so users on direct-IP setups don't depend on CF.
+    let ssoOrigin = '';
+    try {
+      ssoOrigin = new URL(resolvedBaseUrl).origin;
+    } catch {}
+    const ssoUrl = ssoToken && ssoOrigin ? `${ssoOrigin}/api/chat` : '';
     const usage = await streamChat({
       baseUrl: resolvedBaseUrl,
       apiKey: ssoUrl ? ssoToken : decryptSecret(cur.apiKeyEnc || ''),
