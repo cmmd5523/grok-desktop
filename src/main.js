@@ -540,6 +540,7 @@ async function ssoConvFetch(path, method, body) {
       method,
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
       body: body ? JSON.stringify(body) : undefined,
+      signal: AbortSignal.timeout(15000),
     });
     if (!res.ok) return null;
     return await res.json();
@@ -551,16 +552,15 @@ async function ssoConvFetch(path, method, body) {
 
 ipcMain.handle('conversations:list', async () => {
   const remote = await ssoConvFetch('', 'GET');
+  const local = conversationsStore.get().items || [];
   if (remote && Array.isArray(remote.conversations)) {
-    return remote.conversations.map((c) => ({
-      id: c.id,
-      title: c.title || '新对话',
-      createdAt: Number(c.createdAt) || 0,
-      updatedAt: Number(c.updatedAt) || 0,
-    }));
+    // Merge local + cloud so pre-sync local history stays visible.
+    const map = new Map();
+    for (const c of local) map.set(c.id, { id: c.id, title: c.title || '新对话', createdAt: Number(c.createdAt) || 0, updatedAt: Number(c.updatedAt) || 0 });
+    for (const c of remote.conversations) map.set(c.id, { id: c.id, title: c.title || '新对话', createdAt: Number(c.createdAt) || 0, updatedAt: Number(c.updatedAt) || 0 });
+    return Array.from(map.values()).sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
   }
-  const items = conversationsStore.get().items || [];
-  return items.map(({ id, title, createdAt, updatedAt }) => ({ id, title, createdAt, updatedAt }));
+  return local.map(({ id, title, createdAt, updatedAt }) => ({ id, title, createdAt, updatedAt }));
 });
 
 ipcMain.handle('conversations:get', async (_event, id) => {

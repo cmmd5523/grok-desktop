@@ -15,6 +15,15 @@ app.whenReady().then(async () => {
   try {
     // Use the server IP direct path so sync does not depend on Cloudflare.
     await run(`window.grokAPI.setSettings({ baseUrl: 'http://154.9.253.182/v1' })`);
+    // 1) Save a local-only conversation BEFORE login (no token -> local store only).
+    const localId = 'localonly-' + Date.now();
+    const localSaved = await run(`window.grokAPI.saveConversation({
+      id: '${localId}',
+      title: '仅本地旧对话',
+      createdAt: Date.now(), updatedAt: Date.now(),
+      messages: [{ role: 'user', content: '旧对话', ts: Date.now() }],
+    })`);
+    // 2) Login (SSO).
     const login = await run(`window.grokAPI.authLogin({ email: 'admin@grok.local', password: 'cmd13590675523' })`);
     const cid = 'dsync-' + Date.now();
     const saved = await run(`window.grokAPI.saveConversation({
@@ -27,12 +36,14 @@ app.whenReady().then(async () => {
     const list = await run(`window.grokAPI.listConversations()`);
     console.log('LIST 返回:', JSON.stringify(list));
     const found = list.some((c) => c.id === cid);
+    const merged = list.some((c) => c.id === localId);
     const got = await run(`window.grokAPI.getConversation('${cid}')`);
     const msgs = got && got.messages ? got.messages.length : 0;
-    console.log('登录:', login && login.user ? 'ok' : 'fail', '| 保存:', saved, '| 列表含:', found, '| 消息数:', msgs);
+    console.log('登录:', login && login.user ? 'ok' : 'fail', '| 保存:', saved, '| 列表含:', found, '| 合并本地旧对话:', merged, '| 消息数:', msgs);
     // cleanup
     await run(`window.grokAPI.deleteConversation('${cid}')`);
-    const ok = login && login.user && saved === true && found && msgs === 2;
+    await run(`window.grokAPI.deleteConversation('${localId}')`);
+    const ok = login && login.user && saved === true && found && msgs === 2 && merged && localSaved === true;
     console.log(ok ? 'DESKTOP CLOUD SYNC PASS' : 'DESKTOP CLOUD SYNC FAILED');
     app.exit(ok ? 0 : 1);
   } catch (err) {
