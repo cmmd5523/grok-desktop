@@ -522,17 +522,55 @@ ipcMain.handle('settings:set', (_event, patch) => {
   };
 });
 
-ipcMain.handle('conversations:list', () => {
+// Cloud conversation sync (SSO mode): conversations live on the login server
+// so desktop and web share the same history. Local store remains as fallback.
+function ssoOrigin() {
+  try {
+    return new URL(settingsStore.get().baseUrl || DEFAULT_BASE_URL).origin;
+  } catch {
+    return '';
+  }
+}
+async function ssoConvFetch(path, method, body) {
+  const token = authToken();
+  const origin = ssoOrigin();
+  if (!token || !origin) return null;
+  try {
+    const res = await net.fetch(`${origin}/api/conversations${path}`, {
+      method,
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: body ? JSON.stringify(body) : undefined,
+    });
+    if (!res.ok) return null;
+    return await res.json();
+  } catch (err) {
+    console.error('sso conv fetch failed:', err.message);
+    return null;
+  }
+}
+
+ipcMain.handle('conversations:list', async () => {
+  const remote = await ssoConvFetch('', 'GET');
+  if (remote && Array.isArray(remote.conversations)) {
+    return remote.conversations.map((c) => ({
+      id: c.id,
+      title: c.title || '新对话',
+      createdAt: Number(c.createdAt) || 0,
+      updatedAt: Number(c.updatedAt) || 0,
+    }));
+  }
   const items = conversationsStore.get().items || [];
   return items.map(({ id, title, createdAt, updatedAt }) => ({ id, title, createdAt, updatedAt }));
 });
 
-ipcMain.handle('conversations:get', (_event, id) => {
+ipcMain.handle('conversations:get', async (_event, id) => {
+  const remote = await ssoConvFetch('/' + encodeURIComponent(String(id)), 'GET');
+  if (remote && remote.conversation) return remote.conversation;
   const items = conversationsStore.get().items || [];
   return items.find((c) => c.id === id) || null;
 });
 
-ipcMain.handle('conversations:save', (_event, conv) => {
+ipcMain.handle('conversations:save', async (_event, conv) => {
   if (!conv || typeof conv.id !== 'string' || !conv.id) throw new Error('无效的会话数据');
   const cleanMessages = (Array.isArray(conv.messages) ? conv.messages : [])
     .filter((m) => m && (m.role === 'user' || m.role === 'assistant'))
@@ -577,12 +615,19 @@ ipcMain.handle('conversations:save', (_event, conv) => {
   else items.push(cleaned);
   items.sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
   conversationsStore.set({ items });
+  // Cloud sync (SSO): mirror to the login server for web/desktop sharing.
+  await ssoConvFetch('/' + encodeURIComponent(cleaned.id), 'PUT', {
+    title: cleaned.title,
+    messages: cleaned.messages,
+    model: String(conv.model || 'grok-4.3-fast'),
+  }).catch(() => {});
   return true;
 });
 
-ipcMain.handle('conversations:delete', (_event, id) => {
+ipcMain.handle('conversations:delete', async (_event, id) => {
   const state = conversationsStore.get();
   conversationsStore.set({ items: (state.items || []).filter((c) => c.id !== id) });
+  await ssoConvFetch('/' + encodeURIComponent(String(id)), 'DELETE').catch(() => {});
   return true;
 });
 
